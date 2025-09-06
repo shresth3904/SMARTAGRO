@@ -7,6 +7,15 @@
     <title>Document</title>
 </head>
 <body>
+    <header>
+        <div id = "logo">SmartAgro</div>
+        <nav>
+            <a href="{{url_for('index')}}">Home</a>
+            <a href="#">About</a>
+            <a href="#">Contact</a>
+        </nav>
+    </header>
     <h1>Welcome to SMART AGRO</h1>
+    <a id = 'dash_btn' href = "{{url_for('dashboard')}}"> Dashboard</a>
 </body>
 </html>

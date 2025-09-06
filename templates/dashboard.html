@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Dashboard</title>
+</head>
+<body>
+    <header>
+        <div id = "logo">SmartAgro</div>
+        <nav>
+            <a href="{{url_for('index')}}">Home</a>
+            <a href="#">About</a>
+            <a href="#">Contact</a>
+        </nav>
+    </header>
+    <main>
+        <h1>Dashboard</h1>
+        <div class="matrix">
+            <div class = "graph"><canvas id="moisture" width = "50" height = "30"></canvas></div>
+            <div class = "graph"><canvas id="temp" width = "50" height = "30"></canvas></div>
+            <div class = "graph"><canvas id="humidity" width = "50" height = "30"></canvas></div>
+            <div class = "graph"><canvas id="water_lvl" width = "50" height = "30"></canvas></div>  
+        </div>
+    </main>
+
+    <script type="text/javascript">
+        rawData = {{ data | tojson }}
+        temperature = {{temp | tojson }}
+        humidity = {{humidity | tojson }}
+        water_level = {{water_lvl | tojson }}
+        function createLineGraph(elementId, rawData, graphTitle, color1, color2) {
+            const labels = rawData.slice(1).map(row => row[0]);  
+            const values = rawData.slice(1).map(row => row[1]);
+
+            const ctx = document.getElementById(elementId).getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                labels: labels,
+                datasets: [{
+                    label: rawData[0][1], 
+                    data: values,
+                    borderColor: 'white',
+                    backgroundColor: 'white',
+                    borderWidth: 2,
+                    tension: 0.4, 
+                    pointBackgroundColor: color1,
+                    pointRadius: 5
+                }]
+                },
+                options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                    display: true,
+                    text: graphTitle,
+                    color: color2,
+                    font: { size: 20, weight: 'bold' }
+                    }
+                },
+                scales: {
+                    x: {
+                    grid: { color: "gray" },
+                    ticks: { color: "rgb(200, 200, 200)"}
+                    },
+                    y: {
+                    grid: { color: "gray" },
+                    ticks: { color: "rgb(200, 200, 200)" },
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: rawData[0][1],
+                        color: color1,
+                        font: { size: 14, weight: 'bold' }
+                    }
+                    }
+                }
+                }
+            });
+    }
+
+    createLineGraph('moisture', rawData, 'Soil Moisture', 'green', 'lightgreen');
+    createLineGraph('temp', temperature, 'Temperature levels', 'red', 'orange');
+    createLineGraph('humidity', humidity, 'Humidity', 'cyan', 'lightcyan');
+    createLineGraph('water_lvl', water_level, 'Water Levels', 'blue', 'lightblue');
+    </script>
+</body>
+</html>

@@ -16,9 +16,11 @@ def dashboard():
     temp = [['id', 'temp']] + list(cur.execute("SELECT id, temp FROM parameters").fetchall())
     humidity = [['id', 'humidity']] + list(cur.execute("SELECT id, humidity  FROM parameters").fetchall())
     water_lvl = [['id', 'water_lvl']] + list(cur.execute("SELECT id, water_lvl FROM parameters").fetchall())
-    
+    current_val = list(cur.execute("SELECT moisture, temp, humidity, water_lvl FROM parameters ORDER BY time DESC LIMIT 1").fetchone())
+
     con.close()
     
-    return render_template('dashboard.html', data=moisture, temp = temp, humidity = humidity, water_lvl = water_lvl)
+    return render_template('dashboard.html', data=moisture, temp = temp, humidity = humidity, water_lvl = water_lvl ,current_val=current_val)
+
 if __name__ == '__main__':
     app.run(debug=True)

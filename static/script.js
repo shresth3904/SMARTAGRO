@@ -28,7 +28,7 @@ function updateMoistureLevel() {
   fillElement.classList.add("filled");
 }
 
-const targetHumidity = 78;
+const targetHumidity = current_humidity;
 
 const fillElement_humidity = document.getElementById("humidityFill");
 const valueElement_humidity = document.getElementById("humidityValue");

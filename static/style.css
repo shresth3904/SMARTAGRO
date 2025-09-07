@@ -1,3 +1,16 @@
+:root {
+  --moisture_width: 24.66px;
+  --moisture_height: 128.66px;
+  --temp_width: 30px;
+  --temp_height: 128.66px;
+  --water_width: 50px;
+  --water_height: 128.66px;
+  --humidity_hw: 75.33px;
+  --font_size: 1rem;
+}
+
+
+
 body h1 {
   color: rgb(0, 200, 0);
   text-align: center;
@@ -11,6 +24,7 @@ body {
   background-color: rgb(30, 30, 30);
   color: #fff;
   font-family: "Segoe UI", sans-serif;
+  box-sizing: border-box;
 }
 
 #main_page {
@@ -20,6 +34,7 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  box-sizing: border-box;
 }
 
 header {
@@ -31,6 +46,7 @@ header {
   background-color: black;
   position: fixed;
   z-index: 1000;
+  box-sizing: border-box;
 }
 
 #dash_btn {
@@ -68,9 +84,9 @@ main {
   align-items: center;
 }
 
-#parameter_box{
-      border: solid grey 2px;
-  margin:20px;
+#parameter_box {
+  border: solid grey 2px;
+  margin: 20px;
   padding: 0px 80px 10px 80px;
   border-radius: 25px;
 }
@@ -82,6 +98,10 @@ main {
   align-items: center;
 }
 
+#parameters p{
+  font-size: 14px;
+}
+
 .moisture-container {
   display: flex;
   flex-direction: column;
@@ -90,8 +110,8 @@ main {
 }
 
 .moisture-bar {
-  width: 37px;
-  height: 193px;
+  width: var(--moisture_width);
+  height: var(--moisture_height);
   border-radius: 19px;
   background-color: #333;
   box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.7);
@@ -111,7 +131,7 @@ main {
 }
 
 .moisture-value {
-  font-size: 1.5rem;
+  font-size: var(--font_size);
   font-weight: 600;
   color: #4caf50;
   text-shadow: 0 0 10px #4caf50;
@@ -140,8 +160,8 @@ main {
 
 .thermometer {
   position: relative;
-  width: 45px;
-  height: 193px;
+  width: var(--temp_width);
+  height: var(--temp_height);
   background: linear-gradient(180deg, #1a1a1a, #0a0a0a);
   border-radius: 30px;
   overflow: hidden;
@@ -158,8 +178,7 @@ main {
   background: linear-gradient(180deg, #ffb347, #ff7034, #e63946, #b71c1c);
   border-radius: 30px 30px 0 0;
   transition: height 1.2s ease;
-  box-shadow: inset 0 0 12px rgba(255, 120, 0, 0.5),
-    0 0 20px rgba(255, 80, 40, 0.4);
+  box-shadow: inset 0 0 12px rgba(255, 120, 0, 0.5), 0 0 20px rgba(255, 80, 40, 0.4);
 }
 
 .thermometer::after {
@@ -178,7 +197,7 @@ main {
 
 .temp-value {
   margin-top: 20px;
-  font-size: 1.5rem;
+  font-size: var(--font_size);
   font-weight: 600;
   color: #ff7034;
   letter-spacing: 1px;
@@ -196,8 +215,8 @@ main {
 }
 
 .water-tank {
-  width: 75px;
-  height: 193px;
+  width: var(--water_width);
+  height: var(--water_height);
   border: 4px solid #4a90e2;
   border-radius: 10px;
   position: relative;
@@ -219,7 +238,7 @@ main {
 
 .level-value {
   margin-top: 20px;
-  font-size: 1.5rem;
+  font-size: var(--font_size);
   font-weight: 500;
   color: #7ab5f7;
   text-shadow: 0 0 10px #7ab5f7;
@@ -233,8 +252,8 @@ main {
 }
 
 .humidity-gauge {
-  width: 113px;
-  height: 113px;
+  width: var(--humidity_hw);
+  height: var(--humidity_hw);
   border-radius: 50%;
   background-color: #333;
   box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.7);
@@ -256,7 +275,7 @@ main {
 }
 
 .humidity-value {
-  font-size: 1.5rem;
+  font-size: var(--font_size);
   font-weight: 600;
   color: #80deea;
   text-shadow: 0 0 10px #80deea;
@@ -290,4 +309,64 @@ main {
   margin: 20px;
   padding: 10px;
   background-color: black;
+}
+
+@media (max-width: 768px) {
+  body h1 {
+    font-size: 30px;
+  }
+
+
+
+  #dash_btn {
+    margin: 10px 0;
+    margin-left: 0;
+  }
+
+
+
+  main {
+    padding-top: 50px;
+  }
+
+  #parameter_box {
+    width:50vw;
+  }
+
+  
+
+  .moisture-container,
+  .temp,
+  .water-tank-container,
+  .humidity-container {
+    margin: 10px 10px;
+  }
+
+  
+
+  .graph {
+
+    width: 90vw;
+  }
+
+:root {
+  --moisture_width: 18.5px;
+  --moisture_height: 96.5px;
+  --temp_width: 22.5px;
+  --temp_height: 96.5px;
+  --water_width: 37.5px;
+  --water_height: 96.5px;
+  --humidity_hw: 56.5px;
+  --font_size: 0.75rem;
+}
+
+#parameters p{
+  font-size: 10px;
+}
+
+#about_ref, #contact_ref{
+  display:none;
+}
+
+
 }

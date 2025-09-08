@@ -369,3 +369,87 @@ main {
 }
 
 }
+.team-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 cards per row */
+  gap: 20px;
+  justify-items: center; /* center each card in its column */
+  margin-top: 20px;
+}
+
+.team-card {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  width: 220px;
+  text-align: center;
+  padding: 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease;
+}
+
+.team-card:hover {
+  transform: translateY(-5px);
+}
+
+.team-photo-placeholder {
+  width: 100px;
+  height: 100px;
+  background-color: #f0f0f0;
+  margin: 0 auto 10px auto;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #aaa;
+  font-size: 0.8em;
+}
+
+.team-card h4 {
+  margin: 10px 0 10px 0;
+  font-size: 1.1em;
+}
+
+.social-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.btn {
+  padding: 8px 12px;
+  text-decoration: none;
+  border-radius: 5px;
+  font-size: 0.9em;
+  transition: background-color 0.3s ease;
+}
+
+.btn.linkedin {
+  background-color: #0077b5;
+  color: white;
+}
+
+.btn.linkedin:hover {
+  background-color: #005582;
+}
+
+.btn.github {
+  background-color: #333;
+  color: white;
+}
+
+.btn.github:hover {
+  background-color: #000;
+}
+
+/* Responsive layout for smaller screens */
+@media screen and (max-width: 900px) {
+  .team-container {
+    grid-template-columns: repeat(2, 1fr); /* 2 per row */
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .team-container {
+    grid-template-columns: 1fr; /* 1 per row */
+  }
+}

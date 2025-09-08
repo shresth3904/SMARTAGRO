@@ -21,6 +21,10 @@ def dashboard():
     con.close()
     
     return render_template('dashboard.html', data=moisture, temp = temp, humidity = humidity, water_lvl = water_lvl ,current_val=current_val)
+
+@app.route('/about')
+def about():
+    return render_template('about.html')
 def changeval():
     conn = sqlite3.connect('database.db')
     cur = conn.cursor()

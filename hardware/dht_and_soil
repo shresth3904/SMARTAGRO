@@ -1,0 +1,44 @@
+#include <DHT.h>
+
+#define soilsensor 34
+#define DHTPIN 18
+#define DHTTYPE DHT22
+
+int moisture=0;
+const int dry_reading=4095;
+const int wet_reading=1560;
+
+DHT dht(DHTPIN,DHTTYPE);
+
+void setup() {
+  Serial.begin(115200);
+  analogReadResolution(12);
+  analogSetPinAttenuation(soilsensor, ADC_11db); 
+  dht.begin();
+
+}
+
+void loop() {
+  
+  moisture=analogRead(soilsensor);
+  int moisture_percent=(moisture,dry_reading,wet_reading,0,100);
+  if (moisture_percent < 0)  moisture_percent = 0;
+  if (moisture_percent > 100) moisture_percent = 100;
+  Serial.println("Soil: ");
+  Serial.println(moisture_percent);
+  delay(1000);
+
+ float humidity=dht.readHumidity();
+  float temperature=dht.readTemperature();
+  float temperatureF=dht.readTemperature(true);
+
+  Serial.print("\nHumidity: ");
+  Serial.print(humidity);
+  Serial.print("\nTemperature: ");
+  Serial.print(temperature);
+  Serial.print("\n")
+  Serial.print("C");
+
+  delay(2000);
+
+}

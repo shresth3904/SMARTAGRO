@@ -128,7 +128,7 @@ async function fetchData() {
     }
 }
   
-const intervalId = setInterval(fetchData, 1000);
+const intervalId = setInterval(fetchData, 500);
   
 let mercury = document.getElementById("mercury");
 let tempValue = document.getElementById("tempValue");

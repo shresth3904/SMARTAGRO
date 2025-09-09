@@ -11,11 +11,10 @@
 
 // === Tank Settings ===
 const int tankHeight = 100; // cm
-const int waterSamples = 5; // Number of readings to average
 
 // === Soil Moisture Settings ===
-const int dry_reading = 4095;
-const int wet_reading = 1560;
+const int dry_reading = 4095;   // dry value
+const int wet_reading = 1560;   // wet value
 
 // === WiFi Settings ===
 const char* ssid = "Piyush's OnePlus";
@@ -79,26 +78,11 @@ int readWaterLevelSingle() {
   return waterLevelPercent;
 }
 
-// ===== Smoothed water level =====
-int readWaterLevel() {
-  int total = 0;
-  int validCount = 0;
-  for (int i = 0; i < waterSamples; i++) {
-    int lvl = readWaterLevelSingle();
-    if (lvl >= 0) {
-      total += lvl;
-      validCount++;
-    }
-    delay(50); // short delay between samples
-  }
-  if (validCount == 0) return -1;
-  return round((float)total / validCount);
-}
-
 // ===== Read soil moisture =====
 int readSoilMoisture() {
   int moisture = analogRead(SOIL_PIN);
-  int moisturePercent = map(moisture, dry_reading, wet_reading, 0, 100);
+  // Ensure wet = 100% and dry = 0%
+  int moisturePercent = map(moisture, wet_reading, dry_reading, 100, 0);
   moisturePercent = constrain(moisturePercent, 0, 100);
   return moisturePercent;
 }
@@ -144,7 +128,7 @@ void sendData(int waterLevel, int soilMoisture, float humidity, float temperatur
 }
 
 void loop() {
-  int waterLevel = readWaterLevel();
+  int waterLevel = readWaterLevelSingle();
   int soilMoisture = readSoilMoisture();
   float humidity = 0, temperature = 0;
 
@@ -157,8 +141,9 @@ void loop() {
   Serial.print("Soil Moisture: "); Serial.print(soilMoisture); Serial.println("%");
   Serial.print("Humidity: "); Serial.print(humidity); Serial.println("%");
   Serial.print("Temperature: "); Serial.print(temperature); Serial.println("C");
+  Serial.println("=======================");
 
   sendData(waterLevel, soilMoisture, humidity, temperature);
 
-  delay(500);
+  delay(2000); // wait 2s before next reading
 }

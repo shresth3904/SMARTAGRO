@@ -23,8 +23,38 @@
     </header>
     <main>
       <h1>Dashboard</h1>
+      <div id = "box2">
+        <div id = "connection_status">
+          <div id = "connection_status_item">
+          <p>Soil sensor </p>
+          <div class = "connected" id="connection_status_value1">fetching...</div>
+          </div>
+          <div  id = "connection_status_item">
+          <p>DHT </p>
+          <div class = "connected" id="connection_status_value2">fetching...</div>
+          </div>
+          <div  id = "connection_status_item">
+          <p>Ultrasonic </p>
+          <div class = "connected" id="connection_status_value3">fetching...</div>
+          </div>
+        </div>
+        <div id = "weather">
+          <div id = "weather_cond">
+          <div id = "W_logo">
+          {{weather_logo[weather['category']] | safe}}
+          <p class="weather-card-id">{{weather['cond']}}</p>
+          </div>
+          <div class = "weather_details">
+          <p id = "W_temp">{{weather['temp']}}</p>
+          <p id="prob">Rain probability: <span id="prob_value">{{weather['prob']}}</span></p>
+          <p id="prob">Precipitation: <span id="prob_value">{{weather['prec']}}</span></p>
+          </div>
+        </div>
+        </div>
+      </div>
+      <div id = 'box1'>
       <div id = "parameter_box">
-      <h2>Current Parameters</h2>
+      <h2 id = 'p_h2'>Current Parameters</h2>
       <div id="parameters">
         <div class="moisture-container">
             <p>Moisture</p>
@@ -33,13 +63,6 @@
           </div>
           <div class="moisture-value" id="moistureValue">0%</div>
         </div>
-        <div class="temp">
-            <p>Temperature</p>
-          <div class="thermometer">
-            <div class="mercury" id="mercury"></div>
-          </div>
-          <div class="temp-value" id="tempValue">0°C</div>
-        </div>
         <div class="humidity-container">
             <p>humidity</p>
           <div class="humidity-gauge">
@@ -47,13 +70,54 @@
           </div>
           <div class="humidity-value" id="humidityValue">0%</div>
         </div>
-        <div class="water-tank-container">
-            <p>Water Level</a>
-          <div class="water-tank">
-            <div class="water" id="waterLevel"></div>
+        <div class="temp">
+            <p>Temperature</p>
+          <div class="thermometer">
+            <div class="mercury" id="mercury"></div>
           </div>
-          <div class="level-value" id="levelValue">0%</div>
+          <div class="temp-value" id="tempValue">0°C</div>
         </div>
+        
+        
+      </div>
+    </div>
+    <div class = "pump_controls">
+        <div id = "operation_mode">
+          <h3>Operation mode</h3>
+          <div id = "opr_switch">
+            
+            <button class = '{{ 'selected_opr' if current_mode == 'AUTO' else 'opr_btn' }}' 
+                    id = 'auto' 
+                    onclick = "change_opr_mode('AUTO')">AUTO</button>
+
+            <button class = '{{ 'selected_opr' if current_mode == 'MANUAL' else 'opr_btn' }}' 
+                    id = 'manual' 
+                    onclick = "change_opr_mode('MANUAL')">MANUAL</button>
+          </div>
+        </div>
+        <div id = "on_off">
+          <h3>Pump Controls</h3> 
+          <button id = "pump_btn" 
+                  class = "{{ 'pump_btn_disabled' if current_mode == 'AUTO' else 'pump_btn_off' if current_mode == 'MANUAL' else 'pump_btn' }}" 
+                  onclick = "toggle_switch()"
+                  {{ 'disabled' if current_mode == 'AUTO' }}>
+                  {{ 'TURN PUMP ON' if current_mode == 'AUTO' else 'TURN PUMP OFF' }}
+          </button>
+          <h3>Pump status</h3>
+          <p id = "pump_status_value">fetching...</p>
+          <p style="font-size: 12px;color: grey;">*most recent command will be sent to the pump<br> in manual mode when pump is connected</p>
+        </div>
+      </div>
+      <div id = "water_section">
+        <div class="water-tank-container">
+              <p>Water Level</a>
+            <div class="water-tank">
+              <div class="water" id="waterLevel"></div>
+            </div>
+            <div class="level-value" id="levelValue">0%</div>
+            <p id = 'tank_info'>Current volume: 00 liter<br>Total Capacity: 01 liter</p>
+            
+          </div>
       </div>
     </div>
       <div class="matrix">
@@ -73,15 +137,16 @@
     </main>
 
     <script type="text/javascript">
-          rawData = {{ data | tojson }}
-          temperature = {{temp | tojson }}
-          humidity = {{humidity | tojson }}
-          water_level = {{water_lvl | tojson }}
+          rawData = {{ data | tojson }};
+          temperature = {{temp | tojson }};
+          humidity = {{humidity | tojson }};
+          water_level = {{water_lvl | tojson }};
           
-          let current_temp = {{current_val[1]}}
-          let current_water_lvl = {{current_val[3]}}
-          let current_moisture = {{current_val[0]}}
-          let current_humidity = {{current_val[2]}}
+          let current_temp = {{current_val[1]}};
+          let current_water_lvl = {{current_val[3]}};
+          let current_moisture = {{current_val[0]}};
+          let current_humidity = {{current_val[2]}};
+          let current_mode = '{{ current_mode | safe }}';
     </script>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
   </body>

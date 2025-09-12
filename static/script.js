@@ -84,10 +84,41 @@ function convertData(data) {
       water_lvl
     };
 }
-  
+
+let prev_pump_id = 0;
+let pump_req_count = 0;
+let pumpConnectionStatus = 'fetching...';
+async function fetchPumpStatus() {
+  const response = await fetch('/pump_status');
+  if (!response.ok) {
+    throw new Error(`HTTP error! Status: ${response.status}`);
+  }
+  const data = await response.json();
+  if (pump_req_count > 0){
+    if (data[0] != prev_pump_id){
+      pumpConnectionStatus = 'connected';
+      document.getElementById('pump_status_value').textContent = 'Connected';
+      document.getElementById('pump_status_value').className = 'connected';
+    }
+    else {
+      pumpConnectionStatus = 'Disconnected'
+      document.getElementById('pump_status_value').textContent = 'Disconnected';
+      document.getElementById('pump_status_value').className = 'disconnected';
+    }
+  }
+  prev_pump_id = data[0];
+  pump_req_count++;
+  return data[1];
+}
+
+const intervalId_pump = setInterval(fetchPumpStatus, 2000);
+
+let prev_id = 0;
+let connectionStatus = 'connected';
+let connection_req_count = 0;
 async function fetchData() {
     try {
-      const response = await fetch('http://127.0.0.1:5000/fetch_parameters');
+      const response = await fetch('/fetch_parameters');
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
@@ -118,17 +149,42 @@ async function fetchData() {
   
       const lastDataPoint = data[0];
       if (lastDataPoint) {
+          if (lastDataPoint[0] != prev_id){
+            connectionStatus = 'connected';
+          }
+          else connectionStatus = 'Disconnected'
+          prev_id = lastDataPoint[0];
           setTemperature(lastDataPoint[2]);
           updateWaterLevel(lastDataPoint[4]);
           updateMoistureLevel(lastDataPoint[1]);
           updateHumidityLevel(lastDataPoint[3]);
-      }
+    }
     } catch (error) {
       console.error('Error fetching data:', error);
     }
+
+  if (connectionStatus == 'Disconnected'){
+    document.getElementById('connection_status_value1').textContent = 'Disconnected';
+    document.getElementById('connection_status_value1').className = 'disconnected';
+    document.getElementById('connection_status_value2').textContent = 'Disconnected';
+    document.getElementById('connection_status_value2').className = 'disconnected';
+    document.getElementById('connection_status_value3').textContent = 'Disconnected';
+    document.getElementById('connection_status_value3').className = 'disconnected';
+  }
+  else if (connectionStatus == 'connected'){
+    if (connection_req_count > 1){
+    document.getElementById('connection_status_value1').textContent = 'Connected';
+    document.getElementById('connection_status_value1').className = 'connected';
+    document.getElementById('connection_status_value2').textContent = 'Connected';
+    document.getElementById('connection_status_value2').className = 'connected';
+    document.getElementById('connection_status_value3').textContent = 'Connected';
+    document.getElementById('connection_status_value3').className = 'connected';
+  }
+  }
+  connection_req_count++;
 }
   
-const intervalId = setInterval(fetchData, 500);
+const intervalId = setInterval(fetchData, 2000);
   
 let mercury = document.getElementById("mercury");
 let tempValue = document.getElementById("tempValue");
@@ -147,6 +203,7 @@ function setTemperature(t) {
 function updateWaterLevel(level) {
     waterElement.style.height = `${level}%`;
     valueElement.textContent = `${level}%`;
+    document.getElementById('tank_info').innerHTML = `Current volume: ${(level)/100} liter<br>Total Capacity: 01 liter`
 }
 
 function updateMoistureLevel(level) {
@@ -167,3 +224,80 @@ window.onload = function () {
     updateHumidityLevel(current_humidity);
     setTemperature(current_temp);
 };
+
+
+function change_opr_mode(mode) {
+  fetch('/set_mode', {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ mode: mode }),
+  })
+  .then(response => response.json())
+  .then(data => {
+      if (data.status === 'success') {
+          console.log('Mode changed to:', data.mode);
+          const pumpButton = document.getElementById('pump_btn');
+          const auto = document.getElementById('auto');
+          const manual = document.getElementById('manual');
+          
+          current_mode = data.mode; 
+          if (current_mode === 'AUTO') {
+              pumpButton.classList.remove('pump_btn');
+              pumpButton.classList.add('pump_btn_disabled');
+              pumpButton.disabled = true;
+
+              auto.classList.add('selected_opr');
+              auto.classList.remove('opr_btn');
+              manual.classList.add('opr_btn');
+              manual.classList.remove('selected_opr');
+          } else { 
+              pumpButton.classList.add('pump_btn');
+              pumpButton.classList.remove('pump_btn_disabled');
+              pumpButton.disabled = false;
+
+              auto.classList.remove('selected_opr');
+              auto.classList.add('opr_btn');
+              manual.classList.remove('opr_btn');
+              manual.classList.add('selected_opr');
+          }
+      }
+  })
+  .catch(error => console.error('Error setting mode:', error));
+}
+
+function toggle_switch() {
+  const pumpButton = document.getElementById('pump_btn');
+  
+  if (pumpButton.disabled) {
+      return;
+  }
+
+  const isTurningOn = pumpButton.textContent.trim() === 'TURN PUMP ON';
+  const command = isTurningOn ? 1 : 0;
+
+  fetch('/toggle_pump', {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ command: command }),
+  })
+  .then(response => response.json())
+  .then(data => {
+      if (data.status === 'success') {
+          console.log('Pump command sent:', data.command);
+         
+          if (isTurningOn) {
+            pumpButton.textContent = 'TURN PUMP OFF';
+            pumpButton.className = 'pump_btn_off'; 
+        } else {
+            pumpButton.textContent = 'TURN PUMP ON';
+            pumpButton.className = 'pump_btn';
+        }
+      }
+  })
+  .catch(error => console.error('Error toggling pump:', error));
+}
+

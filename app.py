@@ -5,6 +5,8 @@ import time, threading
 
 app = Flask(__name__)
 
+weather_cond = False
+
 category_ids = {
     "Clear / Fair Weather": 1,
     "Rain / Drizzle": 2,
@@ -141,7 +143,25 @@ weather_logo = {
 }
 
 API_KEY = '91251ddd30ce4a8e862203910251009'  # Replace with your actual API key
-CITY = 'namchi'
+CITY = 'delhi'
+
+def send_msg(msg, chat_id):
+    BOT_TOKEN = "8281251787:AAGEnx21qebtG0VS8h9gdckkUZ5bPLoYS6E"
+    CHAT_ID = chat_id
+
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    params = {
+        "chat_id": CHAT_ID,
+        "text": msg,
+        "parse_mode": "Markdown"
+    }
+
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()  
+        print("Message sent successfully!")
+    except requests.exceptions.RequestException as e:
+        print(f"Failed to send message: {e}")
 
 @app.route('/')
 def index():
@@ -160,19 +180,32 @@ def dashboard():
     rain_chance = f"{data['forecast']['forecastday'][0]['day']['daily_chance_of_rain']}%"
     condition = data['current']['condition']['text']
     cond_code = data['current']['condition']['code']
-    print(cond_code)
     weather = {'location':city, 'temp':temperature, 'prec':precipitation, 'prob':rain_chance, 'cond':condition, 'category':weather_category.get(cond_code, 1)}
     con = sqlite3.connect('database.db')
     cur = con.cursor()
     mode_result = cur.execute("SELECT mode FROM system_mode WHERE id = 1").fetchone()
     current_mode = mode_result[0] if mode_result else 'AUTO'
+    pump_status = cur.execute("SELECT command FROM pump_command ORDER BY id DESC LIMIT 1").fetchone()
     cur.execute("SELECT id, moisture FROM parameters ORDER BY id DESC LIMIT 10")
     moisture =  [['id', 'moisture']] + list(cur.fetchall())[::-1]
     temp = [['id', 'temp']] + list(cur.execute("SELECT id, temp FROM parameters ORDER BY id DESC LIMIT 10").fetchall())[::-1]
     humidity = [['id', 'humidity']] + list(cur.execute("SELECT id, humidity  FROM parameters ORDER BY id DESC LIMIT 10").fetchall())[::-1]
     water_lvl = [['id', 'water_lvl']] + list(cur.execute("SELECT id, water_lvl FROM parameters ORDER BY id DESC LIMIT 10").fetchall())[::-1]
     current_val = list(cur.execute("SELECT moisture, temp, humidity, water_lvl FROM parameters ORDER BY time DESC LIMIT 1").fetchone())
-    print(current_val)
+    cur.execute("SELECT DISTINCT crop_name, growth_stage FROM irrigation_schedule ORDER BY crop_name, id")
+    all_schedules = cur.fetchall()
+    crop_data = {}
+    for crop, stage in all_schedules:
+        if crop not in crop_data:
+            crop_data[crop] = []
+        if stage:
+            crop_data[crop].append(stage)
+
+    current_settings_result = cur.execute("SELECT crop_name, growth_stage FROM system_settings WHERE id = 1").fetchone()
+    current_settings = {
+        'crop_name': current_settings_result[0],
+        'growth_stage': current_settings_result[1]
+    }
     con.close()
     
     return render_template('dashboard.html',
@@ -183,8 +216,29 @@ def dashboard():
                            current_val=current_val, 
                            weather = weather, 
                            weather_logo = weather_logo,
-                           current_mode = current_mode
+                           current_mode = current_mode,
+                           pump_status = pump_status,
+                           crop_data = crop_data,
+                           current_settings = current_settings
                            )
+
+@app.route('/update_settings', methods=['POST'])
+def update_settings():
+
+    selected_crop = request.form.get('crop_name')
+    selected_stage = request.form.get('growth_stage')
+
+    conn = sqlite3.connect('database.db')
+    cur = conn.cursor()
+    
+    cur.execute("UPDATE system_settings SET crop_name = ?, growth_stage = ? WHERE id = 1", (selected_crop, selected_stage))
+    conn.commit()
+    conn.close()
+
+    print(f"System settings updated to: {selected_crop} - {selected_stage}")
+
+    return redirect(url_for('dashboard'))
+
 
 @app.route('/about')
 def about():
@@ -313,8 +367,9 @@ def pump_status():
     conn = sqlite3.connect('database.db')
     cur = conn.cursor()
     status = cur.execute("SELECT id, status FROM pump_connection ORDER BY id DESC LIMIT 1").fetchone()
+    command = cur.execute("SELECT command FROM pump_command ORDER BY id DESC LIMIT 1").fetchone()
     conn.close()
-    return jsonify(status)
+    return jsonify(status, command)
     
 
 @app.route('/fetch_parameters')
@@ -323,7 +378,7 @@ def fetch_parameters():
     cur = con.cursor()
     cur.execute("SELECT id , moisture, temp, humidity, water_lvl FROM parameters ORDER BY id DESC LIMIT 10")
     data = cur.fetchall()
-    #changeval()
+    changeval()
     return jsonify(data)
 
 
@@ -357,54 +412,100 @@ def toggle_pump():
 
 
 def auto_mode_logic():
+    
+    SATURATION_POINT = 95    
+    RAIN_CHANCE_THRESHOLD = 70 
+    RAIN_AMOUNT_THRESHOLD = 10
+    WATER_TANK_MIN_LEVEL = 20  
+    
    
+    PERMITTED_START_HOUR = 4   
+    PERMITTED_END_HOUR = 10   
     while True:
-   
-        time.sleep(10)
+        time.sleep(5)
+        
+        conn = None
         try:
             conn = sqlite3.connect('database.db')
             cur = conn.cursor()
 
             mode_result = cur.execute("SELECT mode FROM system_mode WHERE id = 1").fetchone()
             current_mode = mode_result[0] if mode_result else 'AUTO'
-
+            print(current_mode)
             if current_mode != 'AUTO':
                 conn.close()
                 continue
 
-          
-            moisture_result = cur.execute("SELECT moisture FROM parameters ORDER BY id DESC LIMIT 1").fetchone()
-            if not moisture_result:
+            settings_result = cur.execute("SELECT crop_name, growth_stage FROM system_settings WHERE id = 1").fetchone()
+            if not settings_result:
+                print("[AUTO MODE] Error: Crop settings not found.")
                 conn.close()
                 continue
-
-            latest_moisture = moisture_result[0]
-
-         
+            crop_name, growth_stage = settings_result
+            print(crop_name, growth_stage)
+            threshold_result = cur.execute(
+                "SELECT start_irrigation_threshold_fc FROM irrigation_schedule WHERE crop_name = ? AND growth_stage = ?",
+                (crop_name, growth_stage)
+            ).fetchone()
+            if not threshold_result:
+                print(f"[AUTO MODE] Error: No schedule found for {crop_name} ({growth_stage}).")
+                conn.close()
+                continue
+            start_threshold = threshold_result[0]
+            print(start_threshold)
+            sensor_result = cur.execute("SELECT moisture, water_lvl FROM parameters ORDER BY id DESC LIMIT 1").fetchone()
+            if not sensor_result:
+                conn.close()
+                continue
+            latest_moisture, water_level = sensor_result
+            print("latest_moisture, water_level", latest_moisture, water_level)
+            url = f"http://api.weatherapi.com/v1/forecast.json?key={API_KEY}&q={CITY}&days=1&aqi=no&alerts=no"
+            response = requests.get(url)
+            weather_data = response.json()
+            rain_chance = weather_data['forecast']['forecastday'][0]['day']['daily_chance_of_rain']
+            precip_mm = weather_data['forecast']['forecastday'][0]['day']['totalprecip_mm']
+            print("rain_chance, precip_mm", rain_chance, precip_mm)
+            current_hour = time.localtime().tm_hour
             last_command_result = cur.execute("SELECT command FROM pump_command ORDER BY id DESC LIMIT 1").fetchone()
-            last_command = last_command_result[0] if last_command_result else 0 # Default to OFF
-
-        
+            last_command = last_command_result[0] if last_command_result else 0
+            print("last_command", last_command)
             new_command = None
-            if latest_moisture < 50 and last_command != 1:
-              
-                new_command = 1
-                print(f"[AUTO MODE] Moisture is {latest_moisture} (<50). Turning pump ON.")
+            reason = ""
 
-            elif latest_moisture > 80 and last_command != 0:
-              
+    
+            if rain_chance > RAIN_CHANCE_THRESHOLD or precip_mm > RAIN_AMOUNT_THRESHOLD:
                 new_command = 0
-                print(f"[AUTO MODE] Moisture is {latest_moisture} (>80). Turning pump OFF.")
+                reason = f"Pump OFF for {crop_name}. Skipping due to rain forecast in {CITY} ({rain_chance}% chance)."
+            
+            elif water_level < WATER_TANK_MIN_LEVEL:
+                new_command = 0
+                reason = f"Pump OFF. CRITICAL: Water tank level is low ({water_level}%)."
 
-        
-            if new_command is not None:
+            elif latest_moisture > SATURATION_POINT:
+                new_command = 0
+                reason = f"Pump OFF for {crop_name}. Soil moisture ({latest_moisture}%) is above saturation point."
+            
+            elif not (PERMITTED_START_HOUR <= current_hour < PERMITTED_END_HOUR):
+                new_command = 0
+                reason = f"Command override: Current hour ({current_hour}) is outside the permitted schedule ({PERMITTED_START_HOUR}:00 - {PERMITTED_END_HOUR}:00)."
+            
+            elif latest_moisture < start_threshold and (PERMITTED_START_HOUR <= current_hour < PERMITTED_END_HOUR):
+                new_command = 1
+                reason = f"Pump ON for {crop_name} ({growth_stage}). Moisture ({latest_moisture}%) is below threshold ({start_threshold}%)."
+
+            if new_command is not None and new_command != last_command:
                 cur.execute("INSERT INTO pump_command (command) VALUES (?)", (new_command,))
                 conn.commit()
-            
-            conn.close()
+                if reason: 
+                    print(f"[AUTO MODE] {reason}")
+                    send_msg(reason, "1234815808")
 
         except Exception as e:
             print(f"Error in auto_mode_logic thread: {e}")
+        
+        finally:
+            if conn:
+                conn.close()
 
 if __name__ == '__main__':
     auto_thread = threading.Thread(target=auto_mode_logic, daemon=True)

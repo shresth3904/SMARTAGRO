@@ -83,11 +83,106 @@ main {
 
 }
 
+.settings-container {
+  background-color: #ffffff;
+  padding: 30px 40px;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  max-width: 450px;
+  border: 1px solid #e0e0e0;
+}
+
+
+#settings-title {
+  text-align: center;
+  color: #1c3d5a;
+  font-size: 24px;
+  font-weight: 600;
+  margin-top: 0;
+  margin-bottom: 30px;
+}
+
+
+.form-group {
+  margin-bottom: 25px;
+}
+
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #555;
+}
+
+
+select {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  color: #333;
+  background-color: #fdfdfd;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  
+
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+  background-repeat: no-repeat;
+  background-position: right 15px top 50%;
+  background-size: 12px;
+}
+
+select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+}
+
+
+#save-button {
+  width: 100%;
+  padding: 14px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+#save-button:hover {
+  background-color: #0056b3;
+}
+
+#save-button:active {
+  transform: scale(0.99);
+}
+
 #box2{
   display: flex;
   justify-content: center;
   align-items: strech;
   padding: 20px;
+}
+
+#status_box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+}
+
+#connection_pump, #pump_status{
+  display:flex;
+  flex-direction: column;
+  align-items: center;
+
 }
 
 #connection_status {
@@ -125,7 +220,7 @@ main {
   border-radius: 5px;
   width:100px;
   color: black;
-  
+  text-align: center;
 }
 
 #connection_status p {
@@ -726,17 +821,16 @@ main {
   background-color: #000;
 }
 
-/* Responsive layout for smaller screens */
+
 @media screen and (max-width: 900px) {
   .team-container {
     grid-template-columns: repeat(2, 1fr);
-    /* 2 per row */
+    
   }
 }
 
 @media screen and (max-width: 600px) {
   .team-container {
     grid-template-columns: 1fr;
-    /* 1 per row */
   }
 }

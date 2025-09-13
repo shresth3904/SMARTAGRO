@@ -23,6 +23,25 @@
     </header>
     <main>
       <h1>Dashboard</h1>
+      <div class="settings-container">
+        <h2 id="settings-title">Irrigation Settings</h2>
+    
+        <form id="settings-form" action="{{ url_for('update_settings') }}" method="POST">
+            <div class="form-group">
+                <label for="crop-select">Select Crop:</label>
+                <select id="crop-select" name="crop_name">
+                    </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="stage-select">Select Growth Stage:</label>
+                <select id="stage-select" name="growth_stage">
+                    </select>
+            </div>
+    
+            <button id="save-button" type="submit">Save Settings</button>
+        </form>
+    </div>
       <div id = "box2">
         <div id = "connection_status">
           <div id = "connection_status_item">
@@ -103,8 +122,16 @@
                   {{ 'disabled' if current_mode == 'AUTO' }}>
                   {{ 'TURN PUMP ON' if current_mode == 'AUTO' else 'TURN PUMP OFF' }}
           </button>
-          <h3>Pump status</h3>
-          <p id = "pump_status_value">fetching...</p>
+          <div id = "status_box">
+            <div id = "connection_pump">
+          <h3>Connection</h3>
+          <span id = "pump_status_value">fetching...</span>
+          </div>
+          <div id = "pump_status">
+          <h3>Pump Status</h3>
+          <span id = "pump_status_value_icon" class = "{{ 'connected' if pump_status[0] == 1 else 'disconnected' }}">{{'ON' if pump_status[0] == 1 else 'OFF'}}</span>
+          </div>
+          </div>
           <p style="font-size: 12px;color: grey;">*most recent command will be sent to the pump<br> in manual mode when pump is connected</p>
         </div>
       </div>
@@ -141,7 +168,8 @@
           temperature = {{temp | tojson }};
           humidity = {{humidity | tojson }};
           water_level = {{water_lvl | tojson }};
-          
+          const cropData = {{ crop_data | tojson }};
+          const currentSettings = {{ current_settings | tojson }};
           let current_temp = {{current_val[1]}};
           let current_water_lvl = {{current_val[3]}};
           let current_moisture = {{current_val[0]}};

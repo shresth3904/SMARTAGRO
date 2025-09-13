@@ -316,47 +316,4 @@ function toggle_switch() {
     .catch(error => console.error('Error toggling pump:', error));
 }
 
-const cropSelect = document.getElementById('crop-select');
-const stageSelect = document.getElementById('stage-select');
-
-function updateStageDropdown(selectedCrop) {
-
-  stageSelect.innerHTML = '';
-
-
-  const stages = cropData[selectedCrop] || [];
-
-
-  stages.forEach(stage => {
-    const option = document.createElement('option');
-    option.value = stage;
-    option.textContent = stage;
-
-    if (selectedCrop === currentSettings.crop_name && stage === currentSettings.growth_stage) {
-      option.selected = true;
-    }
-    stageSelect.appendChild(option);
-  });
-}
-
-
-
-Object.keys(cropData).forEach(crop => {
-  const option = document.createElement('option');
-  option.value = crop;
-  option.textContent = crop;
-
-  if (crop === currentSettings.crop_name) {
-    option.selected = true;
-  }
-  cropSelect.appendChild(option);
-});
-
-
-updateStageDropdown(cropSelect.value);
-
-
-cropSelect.addEventListener('change', (event) => {
-  updateStageDropdown(event.target.value);
-});
 

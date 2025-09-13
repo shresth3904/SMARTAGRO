@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF--8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='settings.css') }}"
+    />
+    <title>Settings - SmartAgro</title>
+  </head>
+  <body>
+    <header>
+      <div id="logo">SmartAgro</div>
+      <nav>
+        <a id="home_ref" href="{{url_for('index')}}">Home</a>
+        <a id="dash_ref" href="{{url_for('dashboard')}}">Dashboard</a>
+        <a id="about_ref" href="{{url_for('about')}}">About</a>
+        <a id="contact_ref" href="#">Contact</a>
+      </nav>
+    </header>
+
+    <main>
+        <div style="width: 100%; max-width: 800px; margin-bottom: 30px;">
+            <a href="/dashboard" style="color: #4CAF50; text-decoration: none; font-weight: 500; transition: color 0.2s ease;">
+                ← Back to Dashboard
+            </a>
+        </div>
+      <h1>System Settings</h1>
+      <div class="settings-container">
+        <h2 id="settings-title">Irrigation Settings</h2>
+
+        <form
+          id="settings-form"
+          action="{{ url_for('update_settings') }}"
+          method="POST"
+        >
+        <div class = "crop_select">
+          <div class="form-group">
+            <label for="crop-select">Select Crop:</label>
+            <select id="crop-select" name="crop_name">
+              </select>
+          </div>
+
+          <div class="form-group">
+            <label for="stage-select">Select Growth Stage:</label>
+            <select id="stage-select" name="growth_stage">
+              </select>
+          </div>
+          </div>
+          <div class = "weather_location">
+            <div class="form-group">
+              <label for="city-input">Weather Location:</label>
+              <input type="text" id="city-input" name="city" value="{{ current_settings.city }}" />
+            </div>
+          </div>
+          <div class = "time_range">
+            <div class="form-group">
+              <label for="start-time">Start Time:</label>
+              <input type="time" id="start-time" name="start_at" value="{{ current_settings.start_at }}" />
+            </div>
+            <div class="form-group">
+              <label for="stop-time">Stop Time:</label>
+              <input type="time" id="stop-time" name="end_at" value="{{ current_settings.end_at }}" />
+            </div>
+          </div>
+
+          <button id="save-button" type="submit">Save Settings</button>
+        </form>
+          
+      </div>
+    </main>
+
+    <script>
+      const cropData = {{ crop_data | tojson }};
+      const currentSettings = {{ current_settings | tojson }};
+    </script>
+
+    <script type="text/javascript">
+      const cropSelect = document.getElementById("crop-select");
+      const stageSelect = document.getElementById("stage-select");
+
+      // Function to update the growth stage dropdown based on the selected crop
+      function updateStageDropdown(selectedCrop) {
+        // Clear existing stage options
+        stageSelect.innerHTML = "";
+
+        // Get the stages for the selected crop from our injected data
+        const stages = cropData[selectedCrop] || [];
+
+        // Populate the stage dropdown with new options
+        stages.forEach((stage) => {
+          const option = document.createElement("option");
+          option.value = stage;
+          option.textContent = stage;
+
+          // Check if this option should be pre-selected based on current settings
+          if (
+            selectedCrop === currentSettings.crop_name &&
+            stage === currentSettings.growth_stage
+          ) {
+            option.selected = true;
+          }
+          stageSelect.appendChild(option);
+        });
+      }
+
+      // --- Initialize the Dropdowns on Page Load ---
+
+      // 1. Populate the main crop dropdown
+      Object.keys(cropData).forEach((crop) => {
+        const option = document.createElement("option");
+        option.value = crop;
+        option.textContent = crop;
+
+        // Pre-select the currently saved crop
+        if (crop === currentSettings.crop_name) {
+          option.selected = true;
+        }
+        cropSelect.appendChild(option);
+      });
+
+      // 2. Populate the stage dropdown for the initially selected crop
+      updateStageDropdown(cropSelect.value);
+
+      // --- Add Event Listener ---
+
+      // When the crop selection changes, update the stage dropdown accordingly
+      cropSelect.addEventListener("change", (event) => {
+        updateStageDropdown(event.target.value);
+      });
+    </script>
+  </body>
+</html>

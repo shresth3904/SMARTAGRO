@@ -23,25 +23,7 @@
     </header>
     <main>
       <h1>Dashboard</h1>
-      <div class="settings-container">
-        <h2 id="settings-title">Irrigation Settings</h2>
-    
-        <form id="settings-form" action="{{ url_for('update_settings') }}" method="POST">
-            <div class="form-group">
-                <label for="crop-select">Select Crop:</label>
-                <select id="crop-select" name="crop_name">
-                    </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="stage-select">Select Growth Stage:</label>
-                <select id="stage-select" name="growth_stage">
-                    </select>
-            </div>
-    
-            <button id="save-button" type="submit">Save Settings</button>
-        </form>
-    </div>
+      
       <div id = "box2">
         <div id = "connection_status">
           <div id = "connection_status_item">

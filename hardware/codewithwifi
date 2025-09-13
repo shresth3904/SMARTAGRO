@@ -1,0 +1,178 @@
+#include <WiFi.h>
+#include <WiFiManager.h>    // https://github.com/tzapu/WiFiManager
+#include <HTTPClient.h>
+#include <DHT.h>
+#include <Preferences.h>    // ESP32 NVS storage
+
+// === Pins ===
+#define TRIG_PIN 5
+#define ECHO_PIN 18
+#define SOIL_PIN 34
+#define DHTPIN 23
+#define DHTTYPE DHT22
+
+// === Tank Settings ===
+const int tankHeight = 100; // cm
+const int waterSamples = 5; // Number of readings to average
+
+// === Soil Moisture Settings ===
+const int dry_reading = 4095;
+const int wet_reading = 1560;
+
+// === DHT Sensor ===
+DHT dht(DHTPIN, DHTTYPE);
+
+// === Persistent storage for custom settings ===
+Preferences prefs;
+bool shouldSaveConfig = false;
+WiFiManagerParameter *serverParam = nullptr;
+
+String serverName = "";
+
+// called when portal form is saved
+void saveConfigCallback() {
+  shouldSaveConfig = true;
+}
+
+void setup() {
+  Serial.begin(115200);
+  delay(100);
+
+  // clear old Wi-Fi
+  WiFi.disconnect(true, true);
+  delay(1000);
+
+  WiFi.mode(WIFI_STA);
+
+  // pin setup
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+  analogReadResolution(12);
+  analogSetPinAttenuation(SOIL_PIN, ADC_11db);
+
+  dht.begin();
+
+  // load saved server URL
+  prefs.begin("irrig", false);
+  String storedServer = prefs.getString("server", "");
+  if (storedServer.length() == 0) {
+    storedServer = "http://10.192.75.231:5000/update"; // default
+  }
+  serverName = storedServer;
+
+  // setup WiFiManager
+  WiFiManager wifiManager;
+  serverParam = new WiFiManagerParameter("server", "Server URL", serverName.c_str(), 192);
+  wifiManager.addParameter(serverParam);
+  wifiManager.setSaveConfigCallback(saveConfigCallback);
+
+  // start portal if needed
+  Serial.println("Starting WiFiManager...");
+  if (!wifiManager.autoConnect("Irrigation-Setup")) {
+    Serial.println("Failed to connect. Restarting...");
+    delay(3000);
+    ESP.restart();
+  }
+
+  // now connected
+  Serial.print("Connected to WiFi: ");
+  Serial.println(WiFi.SSID());
+  Serial.print("IP: ");
+  Serial.println(WiFi.localIP());
+
+  // save server URL if updated
+  if (shouldSaveConfig) {
+    String newServer = String(serverParam->getValue());
+    prefs.putString("server", newServer);
+    serverName = newServer;
+    Serial.println("Saved new server URL: " + serverName);
+  } else {
+    serverName = String(serverParam->getValue());
+    Serial.println("Using saved server URL: " + serverName);
+  }
+}
+
+// === Sensors ===
+int readWaterLevelSingle() {
+  digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+
+  long duration = pulseIn(ECHO_PIN, HIGH, 30000);
+  if (duration == 0) return -1;
+
+  float distance = (duration * 0.0343) / 2;
+  distance = constrain(distance, 0, tankHeight);
+
+  float filledHeight = tankHeight - distance;
+  int percent = round((filledHeight / tankHeight) * 100);
+  return constrain(percent, 0, 100);
+}
+
+int readWaterLevel() {
+  int total = 0, valid = 0;
+  for (int i = 0; i < waterSamples; i++) {
+    int v = readWaterLevelSingle();
+    if (v >= 0) { total += v; valid++; }
+    delay(50);
+  }
+  if (valid == 0) return -1;
+  return total / valid;
+}
+
+int readSoilMoisture() {
+  int raw = analogRead(SOIL_PIN);
+  int percent = map(raw, dry_reading, wet_reading, 0, 100);
+  return constrain(percent, 0, 100);
+}
+
+bool readDHT(float &h, float &t) {
+  h = dht.readHumidity();
+  t = dht.readTemperature();
+  return !(isnan(h) || isnan(t));
+}
+
+// === Send JSON data ===
+void sendData(int water, int soil, float hum, float temp) {
+  if (WiFi.status() != WL_CONNECTED) return;
+
+  HTTPClient http;
+  http.begin(serverName);
+  http.addHeader("Content-Type", "application/json");
+
+  String body = "{";
+  body += "\"water_level\":" + String(water) + ",";
+  body += "\"soil_moisture\":" + String(soil) + ",";
+  body += "\"humidity\":" + String(hum) + ",";
+  body += "\"temperature\":" + String(temp);
+  body += "}";
+
+  int code = http.POST(body);
+  if (code > 0) {
+    Serial.print("POST Response: ");
+    Serial.println(code);
+    Serial.println(http.getString());
+  } else {
+    Serial.print("Error POST: ");
+    Serial.println(code);
+  }
+  http.end();
+}
+
+void loop() {
+  int water = readWaterLevel();
+  int soil = readSoilMoisture();
+  float hum = 0, temp = 0;
+  if (!readDHT(hum, temp)) Serial.println("DHT22 error!");
+
+  Serial.println("=== Sensor Readings ===");
+  Serial.printf("Water: %d%%\n", water);
+  Serial.printf("Soil: %d%%\n", soil);
+  Serial.printf("Humidity: %.1f%%\n", hum);
+  Serial.printf("Temp: %.1fC\n", temp);
+
+  sendData(water, soil, hum, temp);
+  delay(5000);
+}

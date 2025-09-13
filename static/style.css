@@ -83,6 +83,42 @@ main {
 
 }
 
+#additional_links{
+  display:flex;
+  margin:20px;
+}
+
+#link_buttons{
+  margin-left: 10px;
+  padding:10px;
+  font-family: monospace;
+  background-color: darkolivegreen;
+  text-decoration: none;
+  color: white;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+}
+
+#link_buttons:hover{
+  transform: scale(1.05);
+  background-color:green;
+}
+
+#current_settings_display{
+  display:flex;
+  width: 100%;
+  background-color: black;
+  justify-content: space-evenly;
+  padding: 5px;
+}
+
+#setting_parameter{
+  margin:5px;
+  font-size: 15px;
+  font-family: monospace;
+  padding:5px;
+  border-radius: 25px;
+}
 
 #box2{
   display: flex;

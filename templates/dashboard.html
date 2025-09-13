@@ -23,7 +23,17 @@
     </header>
     <main>
       <h1>Dashboard</h1>
-      
+      <div id = "additional_links">
+        <a id = "link_buttons" href = "/settings">⚙️Settings</a>
+        <a id = "link_buttons" href = "/notifications">🔔Notifications</a>
+      </div>
+      <div id = "current_settings_display">
+        <div id = "setting_parameter">Crop: {{current_settings.crop_name}}</div>
+        <div id = "setting_parameter">Growth stage: {{current_settings.growth_stage}}</div>
+        <div id = "setting_parameter">City: {{current_settings.city}}</div>
+        <div id = "setting_parameter">Irrigation start time: {{current_settings.start_at}}</div>
+        <div id = "setting_parameter">Irrigation stop time: {{current_settings.end_at}}</div>
+      </div>
       <div id = "box2">
         <div id = "connection_status">
           <div id = "connection_status_item">

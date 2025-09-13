@@ -204,10 +204,13 @@ def dashboard():
         if stage:
             crop_data[crop].append(stage)
 
-    current_settings_result = cur.execute("SELECT crop_name, growth_stage FROM system_settings WHERE id = 1").fetchone()
+    current_settings_result = cur.execute("SELECT crop_name, growth_stage, city, start_at, end_at FROM system_settings WHERE id = 1").fetchone()
     current_settings = {
         'crop_name': current_settings_result[0],
-        'growth_stage': current_settings_result[1]
+        'growth_stage': current_settings_result[1],
+        'city':current_settings_result[2],
+        'start_at':current_settings_result[3],
+        'end_at': current_settings_result[4]
     }
     con.close()
     

@@ -1,0 +1,199 @@
+#include <WiFi.h>
+#include <WiFiManager.h>      // https://github.com/tzapu/WiFiManager
+#include <HTTPClient.h>
+#include <DHT.h>
+#include <Preferences.h>      // ESP32 NVS storage
+#include "esp_system.h"
+#include "esp_err.h"
+#include "esp_mac.h"
+
+// === Pins ===
+#define TRIG_PIN 5
+#define ECHO_PIN 18
+#define SOIL_PIN_1 34
+#define SOIL_PIN_2 35
+#define DHTPIN 23
+#define DHTTYPE DHT22
+#define RELAY_PIN 13
+
+// === Tank & Soil Settings ===
+const int tankHeight = 100;   // cm
+const int dry_reading = 4095;
+const int wet_reading = 1560;
+
+// === Globals ===
+DHT dht(DHTPIN, DHTTYPE);
+Preferences prefs;
+WiFiManagerParameter *serverParam = nullptr;
+bool shouldSaveConfig = false;
+String serverBase = "";   // like "http://192.168.1.100:5000"
+
+// === Callbacks ===
+void saveConfigCallback() {
+  shouldSaveConfig = true;
+}
+
+// === Build URLs ===
+String updateURL()  { return serverBase + "/update"; }
+String commandURL() { return serverBase + "/pump"; }
+
+// === Device ID ===
+String getDeviceID() {
+  uint8_t mac[6];
+  if (esp_efuse_mac_get_default(mac) == ESP_OK) {
+    char idStr[13];
+    sprintf(idStr, "%02X%02X%02X%02X%02X%02X",
+            mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    return String(idStr);
+  }
+  return "Unknown";
+}
+
+void setup() {
+  Serial.begin(115200);
+  delay(100);
+
+  // Pin setup
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+  pinMode(RELAY_PIN, OUTPUT);
+  digitalWrite(RELAY_PIN, HIGH);
+
+  analogReadResolution(12);
+  analogSetPinAttenuation(SOIL_PIN_1, ADC_11db);
+  analogSetPinAttenuation(SOIL_PIN_2, ADC_11db);
+
+  dht.begin();
+
+  // Load saved server
+  prefs.begin("smartagro", false);
+  String storedServer = prefs.getString("server", "");
+  if (storedServer.length() == 0) {
+    storedServer = "http://192.168.1.100:5000"; // default if nothing saved
+  }
+  serverBase = storedServer;
+
+  // Start WiFiManager portal if needed
+  WiFi.mode(WIFI_STA);
+  WiFiManager wifiManager;
+  serverParam = new WiFiManagerParameter("server", "Server URL", serverBase.c_str(), 128);
+  wifiManager.addParameter(serverParam);
+  wifiManager.setSaveConfigCallback(saveConfigCallback);
+
+  Serial.println("Starting WiFiManager...");
+  if (!wifiManager.autoConnect("SmartAgro-Setup")) {
+    Serial.println("Failed to connect. Restarting...");
+    delay(3000);
+    ESP.restart();
+  }
+
+  Serial.print("Connected to WiFi: ");
+  Serial.println(WiFi.SSID());
+  Serial.print("IP: ");
+  Serial.println(WiFi.localIP());
+
+  if (shouldSaveConfig) {
+    String newServer = String(serverParam->getValue());
+    prefs.putString("server", newServer);
+    serverBase = newServer;
+    Serial.println("Saved new server URL: " + serverBase);
+  } else {
+    serverBase = String(serverParam->getValue());
+    Serial.println("Using server URL: " + serverBase);
+  }
+}
+
+// === Sensors ===
+int readWaterLevelSingle() {
+  digitalWrite(TRIG_PIN, LOW); delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, HIGH); delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+
+  long duration = pulseIn(ECHO_PIN, HIGH, 30000);
+  if (duration == 0) return -1;
+
+  float distance = (duration * 0.0343) / 2;
+  distance = constrain(distance, 0, tankHeight);
+  float filledHeight = tankHeight - distance;
+  int percent = round((filledHeight / tankHeight) * 100);
+  return constrain(percent, 0, 100);
+}
+
+int readSoilMoisture(int pin) {
+  int raw = analogRead(pin);
+  int percent = map(raw, wet_reading, dry_reading, 100, 0);
+  return constrain(percent, 0, 100);
+}
+
+bool readDHT(float &h, float &t) {
+  h = dht.readHumidity();
+  t = dht.readTemperature();
+  return !(isnan(h) || isnan(t));
+}
+
+// === Communication ===
+void sendData(int water, int soil, float hum, float temp) {
+  if (WiFi.status() != WL_CONNECTED) return;
+
+  HTTPClient http;
+  http.begin(updateURL());
+  http.addHeader("Content-Type", "application/json");
+
+  String body = "{";
+  body += "\"device_id\":\"" + getDeviceID() + "\",";
+  body += "\"water_level\":" + String(water) + ",";
+  body += "\"soil_moisture\":" + String(soil) + ",";
+  body += "\"humidity\":" + String(hum) + ",";
+  body += "\"temperature\":" + String(temp);
+  body += "}";
+
+  int code = http.POST(body);
+  Serial.print("POST: "); Serial.println(code);
+  http.end();
+}
+
+void checkPumpCommand() {
+  if (WiFi.status() != WL_CONNECTED) return;
+
+  HTTPClient http;
+  http.begin(commandURL());
+  int httpResponseCode = http.GET();
+
+  if (httpResponseCode == 200) {
+    String payload = http.getString();
+    payload.trim();
+    Serial.print("Command: ");
+    Serial.println(payload);
+
+    if (payload == "1") {
+      digitalWrite(RELAY_PIN, LOW);  // ON
+      Serial.println("Pump: ON");
+    } else if (payload == "0") {
+      digitalWrite(RELAY_PIN, HIGH); // OFF
+      Serial.println("Pump: OFF");
+    }
+  } else {
+    Serial.print("Command fetch error: ");
+    Serial.println(httpResponseCode);
+  }
+  http.end();
+}
+
+void loop() {
+  int waterLevel = readWaterLevelSingle();
+  int soil1 = readSoilMoisture(SOIL_PIN_1);
+  int soil2 = readSoilMoisture(SOIL_PIN_2);
+  int avgSoil = (soil1 + soil2) / 2;
+
+  float humidity = 0, temperature = 0;
+  readDHT(humidity, temperature);
+
+  Serial.println("=== Sensor Readings ===");
+  Serial.printf("Device: %s | Water: %d%% | Soil1: %d%% | Soil2: %d%% | Avg Soil: %d%% | Hum: %.1f%% | Temp: %.1f°C\n",
+                getDeviceID().c_str(), waterLevel, soil1, soil2, avgSoil, humidity, temperature);
+
+  sendData(waterLevel, avgSoil, humidity, temperature);
+  checkPumpCommand();
+
+  delay(1000);
+}

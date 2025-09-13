@@ -1,4 +1,6 @@
-from flask import Flask, request, render_template, redirect, url_for, jsonify, request
+from flask import Flask, request, render_template, redirect, url_for, jsonify, request, flash
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3, random
 import requests
 import time, threading
@@ -6,6 +8,56 @@ from datetime import datetime, time as dt_time
 
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'we_are_going_to_win_sih'
+
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+def get_db_connection():
+    con = sqlite3.connect('database.db')
+    con.row_factory = sqlite3.Row
+    return con
+
+class User(UserMixin):
+    def __init__(self, id, username, password, device_id, setup):
+        self.id = id
+        self.username = username
+        self.password = password
+        self.device_id = device_id
+        self.setup = setup
+    
+    def get_id(self):
+        return str(self.id)
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    con = get_db_connection()
+    user_data = con.execute('SELECT * FROM users WHERE id = ?', (user_id)).fetchone()
+    con.close()
+    
+    if user_data:
+        return User(id = user_data['id'], username= user_data['username'], password = user_data['password'], device_id=user_data['device_id'], setup = user_data['setup'])
+    return None
+
+def init_db():
+    con = get_db_connection()
+    con.execute(
+        '''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY,
+            username TEXT NOT NULL UNIQUE,
+            password TEXT NOT NULL,
+            setup BOOLEAN NOT NULL DEFAULT FALSE,
+            device_id INTEGER
+        )
+        '''
+    )
+    
+    con.commit()
+    con.close
 
 weather_cond = False
 
@@ -168,8 +220,150 @@ def send_msg(msg, chat_id):
 def index():
     return render_template('index.html')
 
+
+@app.route('/login', methods = ['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+    
+    msg = ''
+    
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        con = get_db_connection()
+        user_data = con.execute('SELECT * FROM users WHERE username = ?', (username, )).fetchone()
+        con.close()
+        
+        if user_data and check_password_hash(user_data['password'], password):
+            user = User(id= user_data['id'], username=user_data['username'], password = user_data['password'], device_id = user_data['device_id'], setup = user_data['setup'])
+            login_user(user)
+            return redirect(url_for('dashboard'))
+        
+        msg = 'Invalid username or password'
+        
+    return render_template('login.html', msg = msg)
+
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    signup_msg = ''
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        
+        if password != confirm_password:
+            flash('Password does not match.')
+            signup_msg = 'Password does not match.'
+            return render_template('signup.html', signup_msg = signup_msg)
+        
+        if ' ' in username or ' ' in password:
+            flash('Username and password must not contain spaces')
+            signup_msg = 'Username and password must not contain spaces'
+            return render_template('signup.html', signup_msg = signup_msg)
+        
+        hashed_password = generate_password_hash(password)
+        
+        conn = get_db_connection()
+        try:
+            conn.execute('INSERT INTO users (username, password) VALUES (?, ?)', (username, hashed_password))
+            conn.commit()
+            flash('Account created successfully! Please log in.')
+            signup_msg = ""
+            conn = get_db_connection()
+            user_data = conn.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone()
+            conn.close()
+            if user_data and check_password_hash(user_data['password'], password):
+                user = User(id=user_data['id'], username=user_data['username'], password=user_data['password'], device_id=-1, setup = user_data['setup'])
+                login_user(user)
+                return redirect(url_for('dashboard'))
+        except sqlite3.IntegrityError:
+            flash('Username already exists. Please choose a different one.')
+            signup_msg = 'Username already exists. Please choose a different one.'
+            return render_template('signup.html', signup_msg = signup_msg)
+        finally:
+            conn.close()
+            
+        
+    return render_template('signup.html')
+     
+
+@app.route("/setup", methods=['GET', 'POST'])
+def setup():
+    conn = None
+    try:
+        conn = sqlite3.connect('database.db')
+        cur = conn.cursor()
+
+        cur.execute("SELECT DISTINCT crop_name, growth_stage FROM irrigation_schedule ORDER BY crop_name, id")
+        all_schedules = cur.fetchall()
+        crop_data = {}
+        for crop, stage in all_schedules:
+            if crop not in crop_data:
+                crop_data[crop] = []
+            if stage:
+                crop_data[crop].append(stage)
+        
+        current_settings_result = cur.execute("SELECT crop_name, growth_stage, city, start_at, end_at FROM system_settings WHERE device_id = 1").fetchone()
+        
+        if current_settings_result:
+            current_settings = {
+                'crop_name': current_settings_result[0], 'growth_stage': current_settings_result[1],
+                'city': current_settings_result[2], 'start_at': current_settings_result[3], 'end_at': current_settings_result[4]
+            }
+        else:
+            current_settings = {
+                'crop_name': '', 'growth_stage': '', 'city': '', 'start_at': '', 'end_at': ''
+            }
+
+        if request.method == 'POST':
+            device_id = request.form.get('device_id')
+            device_code = request.form.get('device_code')
+            crop_name = request.form.get('crop_name')
+            growth_stage = request.form.get('growth_stage')
+            city = request.form.get('city')
+            start_at = request.form.get('start_at')
+            end_at = request.form.get('end_at')
+            
+            cur.execute("SELECT code FROM device WHERE id = ?", (device_id,))
+            device_code_result = cur.fetchone()
+            print(device_code_result[0], device_code)
+            if device_code_result and device_code_result[0] == int(device_code):
+                cur.execute("""
+                    INSERT INTO system_settings (device_id, crop_name, growth_stage, city, start_at, end_at)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(device_id) DO UPDATE SET
+                        crop_name = excluded.crop_name,
+                        growth_stage = excluded.growth_stage,
+                        city = excluded.city,
+                        start_at = excluded.start_at,
+                        end_at = excluded.end_at;
+                """, (device_id, crop_name, growth_stage, city, start_at, end_at))
+                cur.execute("UPDATE users SET device_id = ? WHERE id = ?", (device_id, current_user.id))
+                
+                conn.commit()
+                cur.execute("UPDATE users SET setup = 1 WHERE id = ?", (current_user.id,))
+                current_user.setup = True
+                cur.close()
+                conn.close()
+                return redirect(url_for('dashboard'))
+            else:
+                error = 'Invalid device ID or code'
+                return render_template('setup.html', error=error, crop_data=crop_data, current_settings=current_settings)
+
+        return render_template('setup.html', error='', crop_data=crop_data, current_settings=current_settings)
+
+    finally:
+        if conn:
+            conn.close()
+
+
 @app.route('/dashboard')
 def dashboard():
+   
+    
     con = sqlite3.connect('database.db')
     cur = con.cursor()
     CITY = cur.execute("SELECT city FROM system_settings WHERE id = 1").fetchone()[0]
@@ -230,7 +424,8 @@ def dashboard():
 
 @app.route('/update_settings', methods=['POST'])
 def update_settings():
-
+    
+    
     selected_crop = request.form.get('crop_name')
     selected_stage = request.form.get('growth_stage')
     city = request.form.get('city')
@@ -344,7 +539,8 @@ def get_data():
     temp = data['temperature']
     humidity = data['humidity']
     water_lvl = data['water_level']
-    cur.execute("INSERT INTO parameters(moisture, temp, humidity, water_lvl) VALUES (?, ?, ?, ?)", (moisture, temp, humidity, water_lvl))
+    device_id = current_user.device_id
+    cur.execute("INSERT INTO parameters(moisture, temp, humidity, water_lvl, device_id) VALUES (?, ?, ?, ?, ?)", (moisture, temp, humidity, water_lvl, device_id))
     conn.commit()
     conn.close()
     print("SAVED :",(moisture, temp, humidity, water_lvl))
@@ -357,8 +553,8 @@ def pump():
         conn = sqlite3.connect('database.db')
         cur = conn.cursor()
         
-        status = cur.execute("SELECT command FROM pump_command ORDER BY id DESC LIMIT 1").fetchone()[0]
-        cur.execute("INSERT INTO pump_connection(status) VALUES (?)", (status,))
+        status = cur.execute("SELECT command FROM pump_command WHERE device_id = ? ORDER BY id DESC LIMIT 1", (current_user.device_id,)).fetchone()[0]
+        cur.execute("INSERT INTO pump_connection(status, device_id) VALUES (?, ?)", (status, current_user.device_id))
         conn.commit()
         conn.close()
         print(status)
@@ -417,8 +613,11 @@ def toggle_pump():
         return jsonify({'status': 'success', 'command': command})
     return jsonify({'status': 'error', 'message': 'Invalid command'}), 400
 
+
 @app.route('/settings')
 def settings():
+   
+    
     con = sqlite3.connect('database.db')
     cur = con.cursor()
     cur.execute("SELECT DISTINCT crop_name, growth_stage FROM irrigation_schedule ORDER BY crop_name, id")
@@ -444,6 +643,7 @@ def settings():
 
 @app.route('/notifications')
 def notifications():
+    
     con = sqlite3.connect('database.db')
     cur = con.cursor()
     cur.execute("SELECT msg, time FROM notifications ORDER BY id DESC")

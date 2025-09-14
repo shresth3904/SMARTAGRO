@@ -3,28 +3,181 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Notifications</title>
+    <title>Notifications - SmartAgro</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Roboto+Mono:wght@700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-dark: #121212;
+            --nav-dark: #1a1a1a;
+            --green-accent: #00ff85;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --border-color: #2c2c2c;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 5%;
+            background-color: var(--nav-dark);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        #logo {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1.8em;
+            font-weight: 700;
+            color: var(--green-accent);
+        }
+
+        nav {
+            display: flex;
+            gap: 30px;
+        }
+        
+        nav a {
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+        
+        nav a:hover {
+            color: var(--green-accent);
+        }
+
+        main {
+            width: 100%;
+            max-width: 800px;
+            margin: 3rem auto;
+            padding: 0 2rem;
+            animation: fadeIn 1s ease-in-out;
+        }
+        
+        .back-link {
+            width: 100%;
+            margin-bottom: 2rem;
+        }
+
+        .back-link a {
+            color: var(--green-accent);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+        
+        .back-link a:hover {
+            color: #00e676; /* --green-hover */
+        }
+        
+        main h1 {
+            color: var(--text-primary);
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+            margin-bottom: 2.5rem;
+            font-weight: 700;
+            font-size: 2.5rem;
+        }
+        
+        .notification-item {
+            margin-bottom: 1.5rem;
+        }
+
+        .notification-timestamp {
+            display: block;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            padding-left: 5px;
+        }
+        
+        .notification-content {
+            background-color: var(--nav-dark);
+            padding: 15px 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--green-accent);
+            line-height: 1.7;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+        
+        .notification-content:hover {
+            transform: translateY(-3px);
+            border-color: var(--green-accent);
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px 5%;
+            margin-top: 3rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
 </head>
-<body style="background-color: #121212; color: #e0e0e0; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center;">
+<body>
 
-    <div style="width: 100%; max-width: 800px; margin-bottom: 30px;">
-        <a href="/dashboard" style="color: #4CAF50; text-decoration: none; font-weight: 500; transition: color 0.2s ease;">
-            ← Back to Dashboard
-        </a>
-    </div>
+    <header>
+        <div id="logo">SmartAgro</div>
+        <nav>
+            <a href="#">Home</a>
+            <a href="#">Dashboard</a>
+            <a href="#">About</a>
+            <a href="#">Logout</a>
+        </nav>
+    </header>
 
-    <h1 style="color: #4CAF50; text-align: center; border-bottom: 2px solid #2a2a2a; padding-bottom: 15px; margin-bottom: 30px; width: 100%; max-width: 800px; font-weight: 600; letter-spacing: 1px; font-size: 2rem;">
-        Notifications
-    </h1>
+    <main>
+        <div class="back-link">
+            <a href="/dashboard">
+                ← Back to Dashboard
+            </a>
+        </div>
 
-    {% for msg in noti %}
-    <div style="width: 100%; max-width: 800px; margin-bottom: 20px;">
-        <span style="display: block; color: #9e9e9e; font-size: 0.85rem; margin-bottom: 5px;">{{ msg[1] }}</span>
-        <p style="background-color: #1e1e1e; padding: 15px 20px; border-radius: 10px; border-left: 5px solid #4CAF50; line-height: 1.6; box-shadow: 0 4px 8px rgba(0,0,0,0.3); transition: transform 0.2s ease, box-shadow 0.2s ease; cursor: default;">
-            {{ msg[0].replace('\n', '<br>') | safe }}
-        </p>
-    </div>
-    {% endfor %}
+        <h1>Notifications</h1>
+
+        {% for msg in noti %}
+        <div class="notification-item">
+            <span class="notification-timestamp">{{ msg[1] }}</span>
+            <p class="notification-content">
+                {{ msg[0].replace('\n', '<br>') | safe }}
+            </p>
+        </div>
+        {% endfor %}
+        
+    </main>
+
+    <footer>
+        &copy; 2025 SmartAgro. All rights reserved.
+    </footer>
 
 </body>
 </html>

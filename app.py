@@ -1,14 +1,23 @@
-from flask import Flask, request, render_template, redirect, url_for, jsonify, request, flash
-from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
-from werkzeug.security import generate_password_hash, check_password_hash
-import sqlite3, random
+import sqlite3
+import uuid
+import datetime
+import threading
+import random
 import requests
-import time, threading
+import time
 from datetime import datetime, time as dt_time
 
+from flask import Flask, request, render_template, redirect, url_for, jsonify, flash, g, render_template_string
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
+from telegram import Update
+from telegram.ext import Application, CommandHandler, ContextTypes
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'we_are_going_to_win_sih'
+
+TELEGRAM_BOT_TOKEN = "8281251787:AAGEnx21qebtG0VS8h9gdckkUZ5bPLoYS6E"
+BOT_USERNAME = "SmartAgroBot"
 
 
 login_manager = LoginManager()
@@ -218,7 +227,13 @@ def send_msg(msg, chat_id):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', current_user = current_user)
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
 
 
 @app.route('/login', methods = ['GET', 'POST'])
@@ -418,11 +433,10 @@ def dashboard():
                            pump_status = pump_status,
                            crop_data = crop_data,
                            current_settings = current_settings,
+                           current_user = current_user
                            )
 
 @app.route('/update_settings', methods=['POST'])
-
-
 def update_settings():
     
     
@@ -446,7 +460,7 @@ def update_settings():
 
 @app.route('/about')
 def about():
-    return render_template('about.html')
+    return render_template('about.html', current_user = current_user)
 def changeval():
     conn = sqlite3.connect('database.db')
     cur = conn.cursor()
@@ -609,6 +623,7 @@ def toggle_pump():
 
 
 @app.route('/settings')
+@login_required
 def settings():
     con = sqlite3.connect('database.db')
     cur = con.cursor()

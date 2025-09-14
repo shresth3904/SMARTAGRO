@@ -1,5 +1,4 @@
 import sqlite3
-import uuid
 import datetime
 import threading
 import random
@@ -7,11 +6,9 @@ import requests
 import time
 from datetime import datetime, time as dt_time
 
-from flask import Flask, request, render_template, redirect, url_for, jsonify, flash, g, render_template_string
+from flask import Flask, request, render_template, redirect, url_for, jsonify, flash
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'we_are_going_to_win_sih'

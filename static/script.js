@@ -85,43 +85,52 @@ function convertData(data) {
   };
 }
 
+
 let prev_pump_id = 0;
 let pump_req_count = 0;
 let pumpConnectionStatus = 'fetching...';
+
 async function fetchPumpStatus() {
-  const response = await fetch('/pump_status');
-  if (!response.ok) {
-    throw new Error(`HTTP error! Status: ${response.status}`);
-  }
-  const data = await response.json();
-  // data structure: [ [id, status], [command] ]
-  const latestCommand = Array.isArray(data[1]) ? data[1][0] : null;
-  if (pump_req_count > 0) {
-    if (data[0] != prev_pump_id) {
-      pumpConnectionStatus = 'connected';
+  try {
+    const response = await fetch('/pump_status');
+
+    // If the server response is not OK (e.g., 404, 500), it's a disconnection.
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    // data structure: [ status, command ] which can be [ [id, status], [command] ] or [ null, null ]
+
+    // --- 1. CORRECTED CONNECTION LOGIC ---
+    // If the 'status' part of the data exists, we are connected.
+    if (data && data[0]) {
       document.getElementById('pump_status_value').textContent = 'Connected';
       document.getElementById('pump_status_value').className = 'connected';
+    } else {
+      throw new Error('No status data received from server.');
     }
-    else {
-      pumpConnectionStatus = 'Disconnected'
-      document.getElementById('pump_status_value').textContent = 'Disconnected';
-      document.getElementById('pump_status_value').className = 'disconnected';
-    }
-  }
-  prev_pump_id = data[0];
-  pump_req_count++;
-  // Update ON/OFF icon based on latest pump_command.command
-  if (latestCommand !== null) {
+
+    // --- 2. UPDATE ON/OFF ICON LOGIC ---
+    const latestCommand = Array.isArray(data[1]) ? data[1][0] : null;
+    console.log(latestCommand);
     const icon = document.getElementById('pump_status_value_icon');
-    if (Number(latestCommand) === 1) {
+
+    if (latestCommand !== null && Number(latestCommand) === 1) {
       icon.textContent = 'ON';
       icon.className = 'connected';
     } else {
+      // Show OFF if command is 0 or if no command has ever been issued (null)
       icon.textContent = 'OFF';
       icon.className = 'disconnected';
     }
+
+  } catch (error) {
+    // If ANY error occurs during the fetch, it means we are disconnected.
+    console.error('Failed to fetch pump status:', error);
+    document.getElementById('pump_status_value').textContent = 'Disconnected';
+    document.getElementById('pump_status_value').className = 'disconnected';
   }
-  return data[1];
 }
 
 const intervalId_pump = setInterval(fetchPumpStatus, 2000);

@@ -1,24 +1,274 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <title>Document</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>SmartAgro - Sustainable Farming</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Roboto+Mono:wght@700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-dark: #121212;
+            --nav-dark: #1a1a1a;
+            --green-accent: #00ff85;
+            --green-hover: #00e676;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --border-color: #2c2c2c;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 5%;
+            background-color: var(--nav-dark);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            transition: background-color 0.3s ease;
+        }
+
+        #logo {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1.8em;
+            font-weight: 700;
+            color: var(--green-accent);
+            cursor: pointer;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 1em;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--green-accent);
+        }
+
+        .nav-login, .nav-logout {
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: 2px solid var(--green-accent);
+            color: var(--green-accent);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .nav-login:hover, .nav-logout:hover {
+            background-color: darkgreen;
+        }
+
+        .hamburger {
+            display: none;
+            cursor: pointer;
+        }
+
+        .hamburger .line {
+            width: 25px;
+            height: 3px;
+            background-color: var(--text-primary);
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .hero {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 85vh;
+            padding: 40px 5%;
+            gap: 40px;
+        }
+
+        .hero-content {
+            flex: 1;
+            max-width: 600px;
+            animation: fadeIn 1s ease-in-out;
+        }
+
+        .hero-title {
+            font-size: 3.2em;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            color: #ffffff;
+        }
+
+        .hero-subtitle {
+            font-size: 1.1em;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 40px;
+        }
+
+        #dash_btn {
+            display: inline-block;
+            padding: 15px 35px;
+            background-color: var(--green-accent);
+            color: var(--bg-dark);
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 255, 133, 0.2);
+        }
+
+        #dash_btn:hover {
+            background-color: var(--green-hover);
+            transform: translateY(-3px);
+        }
+
+        .hero-image {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 1s 0.5s ease-in-out backwards;
+        }
+
+        .hero-image img {
+            max-width: 100%;
+            height: auto;
+            filter: drop-shadow(0 0 30px rgba(0, 255, 133, 0.15));
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px 5%;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media screen and (max-width: 768px) {
+            .hero {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .hero-image {
+                margin-top: 40px;
+                max-width: 350px;
+            }
+            
+            .hero-title {
+                font-size: 2.5em;
+            }
+
+            .nav-links {
+                position: fixed;
+                top: 0;
+                right: -100%; /* Start off-screen */
+                height: 100vh;
+                width: 60%;
+                background-color: var(--nav-dark);
+                flex-direction: column;
+                justify-content: center;
+                gap: 40px;
+                transition: right 0.5s ease-in-out;
+                box-shadow: -5px 0 15px rgba(0,0,0,0.2);
+            }
+            
+            .nav-links.nav-active {
+                right: 0;
+            }
+            
+            .hamburger {
+                display: block;
+                z-index: 101;
+            }
+
+            .hamburger.toggle .line:nth-child(1) {
+                transform: rotate(-45deg) translate(-5px, 6px);
+            }
+            .hamburger.toggle .line:nth-child(2) {
+                opacity: 0;
+            }
+            .hamburger.toggle .line:nth-child(3) {
+                transform: rotate(45deg) translate(-5px, -6px);
+            }
+        }
+    </style>
 </head>
 <body>
     <header>
-        <div id = "logo">SmartAgro</div>
-        <nav>
-            <a id = "home_ref" href="{{url_for('index')}}">Home</a>
-        <a id = "dash_ref" href= "{{url_for('dashboard')}}">Dashboard</a>
-        <a id = "about_ref" href="{{url_for('about')}}">About</a>
-        <a id = "contact_ref" href="#">Contact</a>
+        <div id="logo">SmartAgro</div>
+        
+        <nav class="nav-links">
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('about') }}">About</a>
+                <a href="{{ url_for('logout') }}" class="nav-logout">Logout</a>
+            {% else %}
+                <a href="{{ url_for('dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('about') }}">About</a>
+                <a href="{{ url_for('login') }}" class="nav-login">Login</a>
+            {% endif %}
         </nav>
+
+        <div class="hamburger">
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+        </div>
     </header>
-    <div id = "main_page">
-        <h1>Welcome to SmartAgro</h1>
-        <a id = 'dash_btn' href = "{{url_for('dashboard')}}"> Dashboard</a>
-    </div>
+
+    <main class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">Smart Irrigation for a Changing Climate</h1>
+            <p class="hero-subtitle">Empowering farmers in Jorethang with cutting-edge technology to conserve water, improve crop yields, and build resilience through sensor-driven irrigation and real-time monitoring.</p>
+            <a id="dash_btn" href="{{ url_for('dashboard') }}">Go to Dashboard</a>
+        </div>
+        <div class="hero-image">
+            
+        </div>
+    </main>
+
+    <footer>
+        &copy; 2025 SmartAgro. All rights reserved.
+    </footer>
+
+    <script>
+        const hamburger = document.querySelector('.hamburger');
+        const navLinks = document.querySelector('.nav-links');
+
+        hamburger.addEventListener('click', () => {
+            navLinks.classList.toggle('nav-active');
+            hamburger.classList.toggle('toggle');
+        });
+    </script>
 </body>
 </html>

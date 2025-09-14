@@ -3,20 +3,207 @@
   <head>
     <meta charset="UTF--8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='settings.css') }}"
-    />
+
+    <style>
+      :root {
+        --bg-dark: #121212;
+        --nav-dark: #1a1a1a;
+        --input-bg: #222222;
+        --green-accent: #00ff85;
+        --green-hover: #00e676;
+        --text-primary: #e0e0e0;
+        --text-secondary: #a0a0a0;
+        --border-color: #2c2c2c;
+        --shadow-accent: 0 0 0 2px rgba(0, 255, 133, 0.5);
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Poppins', sans-serif;
+        background-color: var(--bg-dark);
+        color: var(--text-primary);
+        line-height: 1.6;
+    }
+
+    header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 5%;
+        background-color: var(--nav-dark);
+        border-bottom: 1px solid var(--border-color);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+
+    #logo {
+        font-family: 'Roboto Mono', monospace;
+        font-size: 1.8em;
+        font-weight: 700;
+        color: var(--green-accent);
+    }
+
+    nav {
+        display: flex;
+        gap: 30px;
+    }
+    
+    nav a {
+        text-decoration: none;
+        color: var(--text-primary);
+        font-weight: 600;
+        transition: color 0.3s ease;
+    }
+    
+    nav a:hover {
+        color: var(--green-accent);
+    }
+
+    main {
+        max-width: 800px;
+        margin: 3rem auto;
+        padding: 0 2rem;
+        animation: fadeIn 1s ease-in-out;
+    }
+
+    main h1 {
+        text-align: center;
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #ffffff;
+        margin-bottom: 2.5rem;
+    }
+    
+    .back-link a {
+        color: var(--green-accent);
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.2s ease;
+        display: inline-block;
+        margin-bottom: 2rem;
+    }
+    
+    .back-link a:hover {
+        color: var(--green-hover);
+    }
+
+    .settings-container {
+        background-color: var(--nav-dark);
+        padding: 2rem 2.5rem;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+    }
+
+    #settings-title {
+        font-size: 1.8rem;
+        color: var(--text-primary);
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    #settings-form {
+        display: grid;
+        gap: 1.5rem;
+    }
+
+    .crop_select, .time_range {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-group label {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-group input, .form-group select {
+        width: 100%;
+        padding: 12px;
+        background-color: var(--input-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+        color: var(--text-primary);
+        font-family: 'Poppins', sans-serif;
+        font-size: 1rem;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .form-group input:focus, .form-group select:focus {
+        outline: none;
+        border-color: var(--green-accent);
+        box-shadow: var(--shadow-accent);
+    }
+    
+    .form-group select {
+        -webkit-appearance: none;
+        appearance: none;
+        background-image: url('data:image/svg+xml;utf8,<svg fill="%23a0a0a0" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+    }
+
+    input[type="time"] {
+        color-scheme: dark;
+    }
+
+    #save-button {
+        background-color: var(--green-accent);
+        color: var(--bg-dark);
+        border: none;
+        padding: 14px 20px;
+        font-size: 1rem;
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+        margin-top: 1rem;
+        justify-self: start;
+    }
+
+    #save-button:hover {
+        background-color: var(--green-hover);
+        transform: translateY(-2px);
+    }
+    
+    footer {
+        text-align: center;
+        padding: 20px 5%;
+        margin-top: 3rem;
+        border-top: 1px solid var(--border-color);
+        color: var(--text-secondary);
+        font-size: 0.9em;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    </style>
     <title>Settings - SmartAgro</title>
   </head>
   <body>
     <header>
       <div id="logo">SmartAgro</div>
       <nav>
-        <a id="home_ref" href="{{url_for('index')}}">Home</a>
-        <a id="dash_ref" href="{{url_for('dashboard')}}">Dashboard</a>
-        <a id="about_ref" href="{{url_for('about')}}">About</a>
-        <a id="contact_ref" href="#">Contact</a>
+        <a id = "home_ref" href="{{url_for('index')}}">Home</a>
+        <a id = "about_ref" href="{{url_for('about')}}">About</a>
+        <a id = "contact_ref" href="{{url_for('logout')}}">Logout</a>
       </nav>
     </header>
 
@@ -80,21 +267,13 @@
       const cropSelect = document.getElementById("crop-select");
       const stageSelect = document.getElementById("stage-select");
 
-      // Function to update the growth stage dropdown based on the selected crop
       function updateStageDropdown(selectedCrop) {
-        // Clear existing stage options
         stageSelect.innerHTML = "";
-
-        // Get the stages for the selected crop from our injected data
         const stages = cropData[selectedCrop] || [];
-
-        // Populate the stage dropdown with new options
         stages.forEach((stage) => {
           const option = document.createElement("option");
           option.value = stage;
           option.textContent = stage;
-
-          // Check if this option should be pre-selected based on current settings
           if (
             selectedCrop === currentSettings.crop_name &&
             stage === currentSettings.growth_stage
@@ -105,27 +284,18 @@
         });
       }
 
-      // --- Initialize the Dropdowns on Page Load ---
-
-      // 1. Populate the main crop dropdown
       Object.keys(cropData).forEach((crop) => {
         const option = document.createElement("option");
         option.value = crop;
         option.textContent = crop;
-
-        // Pre-select the currently saved crop
         if (crop === currentSettings.crop_name) {
           option.selected = true;
         }
         cropSelect.appendChild(option);
       });
 
-      // 2. Populate the stage dropdown for the initially selected crop
       updateStageDropdown(cropSelect.value);
 
-      // --- Add Event Listener ---
-
-      // When the crop selection changes, update the stage dropdown accordingly
       cropSelect.addEventListener("change", (event) => {
         updateStageDropdown(event.target.value);
       });

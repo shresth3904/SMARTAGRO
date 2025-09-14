@@ -239,6 +239,8 @@ def login():
         if user_data and check_password_hash(user_data['password'], password):
             user = User(id= user_data['id'], username=user_data['username'], password = user_data['password'], device_id = user_data['device_id'], setup = user_data['setup'])
             login_user(user)
+            if user.setup == 0:
+                return redirect(url_for('setup'))
             return redirect(url_for('dashboard'))
         
         msg = 'Invalid username or password'
@@ -270,15 +272,9 @@ def signup():
         try:
             conn.execute('INSERT INTO users (username, password) VALUES (?, ?)', (username, hashed_password))
             conn.commit()
-            flash('Account created successfully! Please log in.')
+            flash('Account created successfully!')
             signup_msg = ""
-            conn = get_db_connection()
-            user_data = conn.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchone()
-            conn.close()
-            if user_data and check_password_hash(user_data['password'], password):
-                user = User(id=user_data['id'], username=user_data['username'], password=user_data['password'], device_id=-1, setup = user_data['setup'])
-                login_user(user)
-                return redirect(url_for('dashboard'))
+            return redirect(url_for('login'))
         except sqlite3.IntegrityError:
             flash('Username already exists. Please choose a different one.')
             signup_msg = 'Username already exists. Please choose a different one.'
@@ -287,10 +283,11 @@ def signup():
             conn.close()
             
         
-    return render_template('signup.html')
+    return render_template('signup.html', signup_msg = signup_msg)
      
 
 @app.route("/setup", methods=['GET', 'POST'])
+@login_required
 def setup():
     conn = None
     try:
@@ -306,7 +303,7 @@ def setup():
             if stage:
                 crop_data[crop].append(stage)
         
-        current_settings_result = cur.execute("SELECT crop_name, growth_stage, city, start_at, end_at FROM system_settings WHERE device_id = 1").fetchone()
+        current_settings_result = cur.execute("SELECT crop_name, growth_stage, city, start_at, end_at FROM system_settings WHERE device_id = ?", (current_user.device_id,)).fetchone()
         
         if current_settings_result:
             current_settings = {
@@ -330,7 +327,7 @@ def setup():
             cur.execute("SELECT code FROM device WHERE id = ?", (device_id,))
             device_code_result = cur.fetchone()
             print(device_code_result[0], device_code)
-            if device_code_result and device_code_result[0] == int(device_code):
+            if device_code_result and str(device_code_result[0]) == str(device_code):
                 cur.execute("""
                     INSERT INTO system_settings (device_id, crop_name, growth_stage, city, start_at, end_at)
                     VALUES (?, ?, ?, ?, ?, ?)
@@ -341,12 +338,11 @@ def setup():
                         start_at = excluded.start_at,
                         end_at = excluded.end_at;
                 """, (device_id, crop_name, growth_stage, city, start_at, end_at))
-                cur.execute("UPDATE users SET device_id = ? WHERE id = ?", (device_id, current_user.id))
+                cur.execute("UPDATE users SET device_id = ?  WHERE id = ?", (device_id, current_user.id))
                 
                 conn.commit()
-                cur.execute("UPDATE users SET setup = 1 WHERE id = ?", (current_user.id,))
-                current_user.setup = True
-                cur.close()
+                cur.execute("UPDATE users SET setup = ? WHERE id = ?", (True, current_user.id))
+                conn.commit()
                 conn.close()
                 return redirect(url_for('dashboard'))
             else:
@@ -361,12 +357,14 @@ def setup():
 
 
 @app.route('/dashboard')
+@login_required
 def dashboard():
    
-    
+    if current_user.setup == 0:
+        return redirect(url_for('setup'))
     con = sqlite3.connect('database.db')
     cur = con.cursor()
-    CITY = cur.execute("SELECT city FROM system_settings WHERE id = 1").fetchone()[0]
+    CITY = cur.execute("SELECT city FROM system_settings WHERE device_id = ?", (current_user.device_id,)).fetchone()[0]
     url = f"http://api.weatherapi.com/v1/forecast.json?key={API_KEY}&q={CITY}&days=1&aqi=no&alerts=no"
     response = requests.get(url)
     response.raise_for_status()
@@ -380,15 +378,15 @@ def dashboard():
     cond_code = data['current']['condition']['code']
     weather = {'location':city, 'temp':temperature, 'prec':precipitation, 'prob':rain_chance, 'cond':condition, 'category':weather_category.get(cond_code, 1)}
    
-    mode_result = cur.execute("SELECT mode FROM system_mode WHERE id = 1").fetchone()
+    mode_result = cur.execute("SELECT mode FROM system_mode WHERE device_id = ?", (current_user.device_id,)).fetchone()
     current_mode = mode_result[0] if mode_result else 'AUTO'
-    pump_status = cur.execute("SELECT command FROM pump_command ORDER BY id DESC LIMIT 1").fetchone()
-    cur.execute("SELECT id, moisture FROM parameters ORDER BY id DESC LIMIT 10")
+    pump_status = cur.execute("SELECT command FROM pump_command WHERE device_id = ? ORDER BY id DESC LIMIT 1", (current_user.device_id,)).fetchone()
+    cur.execute("SELECT id, moisture FROM parameters WHERE device_id = ? ORDER BY id DESC LIMIT 10", (current_user.device_id,))
     moisture =  [['id', 'moisture']] + list(cur.fetchall())[::-1]
-    temp = [['id', 'temp']] + list(cur.execute("SELECT id, temp FROM parameters ORDER BY id DESC LIMIT 10").fetchall())[::-1]
-    humidity = [['id', 'humidity']] + list(cur.execute("SELECT id, humidity  FROM parameters ORDER BY id DESC LIMIT 10").fetchall())[::-1]
-    water_lvl = [['id', 'water_lvl']] + list(cur.execute("SELECT id, water_lvl FROM parameters ORDER BY id DESC LIMIT 10").fetchall())[::-1]
-    current_val = list(cur.execute("SELECT moisture, temp, humidity, water_lvl FROM parameters ORDER BY time DESC LIMIT 1").fetchone())
+    temp = [['id', 'temp']] + list(cur.execute("SELECT id, temp FROM parameters WHERE device_id = ? ORDER BY id DESC LIMIT 10", (current_user.device_id,)).fetchall())[::-1]
+    humidity = [['id', 'humidity']] + list(cur.execute("SELECT id, humidity  FROM parameters WHERE device_id = ? ORDER BY id DESC LIMIT 10", (current_user.device_id,)).fetchall())[::-1]
+    water_lvl = [['id', 'water_lvl']] + list(cur.execute("SELECT id, water_lvl FROM parameters WHERE device_id = ? ORDER BY id DESC LIMIT 10", (current_user.device_id,)).fetchall())[::-1]
+    current_val = list(cur.execute("SELECT moisture, temp, humidity, water_lvl FROM parameters WHERE device_id = ? ORDER BY time DESC LIMIT 1", (current_user.device_id,)).fetchone())
     cur.execute("SELECT DISTINCT crop_name, growth_stage FROM irrigation_schedule ORDER BY crop_name, id")
     all_schedules = cur.fetchall()
     crop_data = {}
@@ -398,7 +396,7 @@ def dashboard():
         if stage:
             crop_data[crop].append(stage)
 
-    current_settings_result = cur.execute("SELECT crop_name, growth_stage, city, start_at, end_at FROM system_settings WHERE id = 1").fetchone()
+    current_settings_result = cur.execute("SELECT crop_name, growth_stage, city, start_at, end_at FROM system_settings WHERE device_id = ?", (current_user.device_id,)).fetchone()
     current_settings = {
         'crop_name': current_settings_result[0],
         'growth_stage': current_settings_result[1],
@@ -419,10 +417,12 @@ def dashboard():
                            current_mode = current_mode,
                            pump_status = pump_status,
                            crop_data = crop_data,
-                           current_settings = current_settings
+                           current_settings = current_settings,
                            )
 
 @app.route('/update_settings', methods=['POST'])
+
+
 def update_settings():
     
     
@@ -435,7 +435,7 @@ def update_settings():
     conn = sqlite3.connect('database.db')
     cur = conn.cursor()
     
-    cur.execute("UPDATE system_settings SET crop_name = ?, growth_stage = ?, city = ?, start_at = ?, end_at = ? WHERE id = 1", (selected_crop, selected_stage, city, start_at, end_at))
+    cur.execute("UPDATE system_settings SET crop_name = ?, growth_stage = ?, city = ?, start_at = ?, end_at = ? WHERE device_id = ?", (selected_crop, selected_stage, city, start_at, end_at, current_user.device_id))
     conn.commit()
     conn.close()
 
@@ -454,7 +454,7 @@ def changeval():
     temp = random.randrange(0, 100)
     humidity = random.randrange(0, 100)
     water_lvl = random.randrange(0, 100)
-    cur.execute("INSERT INTO parameters(moisture, temp, humidity, water_lvl) VALUES (?, ?, ?, ?)", (moisture, temp, humidity, water_lvl))
+    cur.execute("INSERT INTO parameters(moisture, temp, humidity, water_lvl, device_id) VALUES (?, ?, ?, ?, ?)", (moisture, temp, humidity, water_lvl, 2))
     conn.commit()
     conn.close()
     print("SAVED :",(moisture, temp, humidity, water_lvl))
@@ -535,11 +535,11 @@ def get_data():
     print("received", data)
     conn = sqlite3.connect('database.db')
     cur = conn.cursor()
+    device_id = data['device_id']
     moisture = data['soil_moisture']
     temp = data['temperature']
     humidity = data['humidity']
     water_lvl = data['water_level']
-    device_id = current_user.device_id
     cur.execute("INSERT INTO parameters(moisture, temp, humidity, water_lvl, device_id) VALUES (?, ?, ?, ?, ?)", (moisture, temp, humidity, water_lvl, device_id))
     conn.commit()
     conn.close()
@@ -549,30 +549,24 @@ def get_data():
 @app.route('/pump', methods = ['GET', 'POST'])
 def pump():
     if (request.method == 'GET'):
-        status = request.get_json()['status']
+        device_id = request.args.get('device_id')
         conn = sqlite3.connect('database.db')
         cur = conn.cursor()
-        
-        status = cur.execute("SELECT command FROM pump_command WHERE device_id = ? ORDER BY id DESC LIMIT 1", (current_user.device_id,)).fetchone()[0]
-        cur.execute("INSERT INTO pump_connection(status, device_id) VALUES (?, ?)", (status, current_user.device_id))
+        status = cur.execute("SELECT command FROM pump_command WHERE device_id = ? ORDER BY id DESC LIMIT 1", (device_id,)).fetchone()[0]
+        cur.execute("INSERT INTO pump_connection(status, device_id) VALUES (?, ?)", (status, device_id))
         conn.commit()
         conn.close()
         print(status)
         return str(status)
-    elif (request.method == 'POST'):
-        status = request.get_json()['status']
-        conn = sqlite3.connect('database.db')
-        cur = conn.cursor()
-        cur.execute("INSERT INTO pump_command(command) VALUES (?)", (status,))
-        conn.commit()
-        conn.close()
-
+    
+    
 @app.route('/pump_status', methods = ['GET'])
 def pump_status():
     conn = sqlite3.connect('database.db')
     cur = conn.cursor()
-    status = cur.execute("SELECT id, status FROM pump_connection ORDER BY id DESC LIMIT 1").fetchone()
-    command = cur.execute("SELECT command FROM pump_command ORDER BY id DESC LIMIT 1").fetchone()
+    print(current_user.device_id)
+    status = cur.execute("SELECT id, status FROM pump_connection WHERE device_id = ? ORDER BY id DESC LIMIT 1", (current_user.device_id,)).fetchone()
+    command = cur.execute("SELECT command FROM pump_command WHERE device_id = ? ORDER BY id DESC LIMIT 1", (current_user.device_id,)).fetchone()
     conn.close()
     return jsonify(status, command)
     
@@ -581,7 +575,7 @@ def pump_status():
 def fetch_parameters():
     con = sqlite3.connect('database.db')
     cur = con.cursor()
-    cur.execute("SELECT id , moisture, temp, humidity, water_lvl FROM parameters ORDER BY id DESC LIMIT 10")
+    cur.execute("SELECT id , moisture, temp, humidity, water_lvl FROM parameters WHERE device_id = ? ORDER BY id DESC LIMIT 10", (current_user.device_id,))
     data = cur.fetchall()
 
     return jsonify(data)
@@ -594,7 +588,7 @@ def set_mode():
     if new_mode in ['AUTO', 'MANUAL']:
         conn = sqlite3.connect('database.db')
         cur = conn.cursor()
-        cur.execute("UPDATE system_mode SET mode = ? WHERE id = 1", (new_mode,))
+        cur.execute("UPDATE system_mode SET mode = ? WHERE device_id = ?", (new_mode, current_user.device_id))
         conn.commit()
         conn.close()
         return jsonify({'status': 'success', 'mode': new_mode})
@@ -607,7 +601,7 @@ def toggle_pump():
     if command in [0, 1]:
         conn = sqlite3.connect('database.db')
         cur = conn.cursor()
-        cur.execute("INSERT INTO pump_command (command) VALUES (?)", (command,))
+        cur.execute("INSERT INTO pump_command (command, device_id) VALUES (?, ?)", (command, current_user.device_id))
         conn.commit()
         conn.close()
         return jsonify({'status': 'success', 'command': command})
@@ -616,8 +610,6 @@ def toggle_pump():
 
 @app.route('/settings')
 def settings():
-   
-    
     con = sqlite3.connect('database.db')
     cur = con.cursor()
     cur.execute("SELECT DISTINCT crop_name, growth_stage FROM irrigation_schedule ORDER BY crop_name, id")
@@ -629,7 +621,7 @@ def settings():
         if stage:
             crop_data[crop].append(stage)
 
-    current_settings_result = cur.execute("SELECT crop_name, growth_stage, city, start_at, end_at FROM system_settings WHERE id = 1").fetchone()
+    current_settings_result = cur.execute("SELECT crop_name, growth_stage, city, start_at, end_at FROM system_settings WHERE device_id = ?", (current_user.device_id,)).fetchone()
     current_settings = {
         'crop_name': current_settings_result[0],
         'growth_stage': current_settings_result[1],
@@ -646,114 +638,135 @@ def notifications():
     
     con = sqlite3.connect('database.db')
     cur = con.cursor()
-    cur.execute("SELECT msg, time FROM notifications ORDER BY id DESC")
+    cur.execute("SELECT msg, time FROM notifications WHERE device_id = ? ORDER BY id DESC", (current_user.device_id,))
     
     noti = cur.fetchall()
     
     return render_template('notifications.html', noti = noti)
 
+SATURATION_POINT = 95
+RAIN_CHANCE_THRESHOLD = 70
+RAIN_AMOUNT_THRESHOLD = 10
+WATER_TANK_MIN_LEVEL = 20
+
 def auto_mode_logic():
-    SATURATION_POINT = 95
-    RAIN_CHANCE_THRESHOLD = 70
-    RAIN_AMOUNT_THRESHOLD = 10
-    WATER_TANK_MIN_LEVEL = 20
-    
     while True:
         time.sleep(5)
-       
         conn = None
         try:
             conn = sqlite3.connect('database.db', timeout=10)
             cur = conn.cursor()
 
-            mode_result = cur.execute("SELECT mode FROM system_mode WHERE id = 1").fetchone()
-            current_mode = mode_result[0] if mode_result else 'AUTO'
-            
-            if current_mode != 'AUTO':
-                conn.close()
-                continue
-            print('checked')
-            settings_result = cur.execute(
-                "SELECT crop_name, growth_stage, city, start_at, end_at FROM system_settings WHERE id = 1"
-            ).fetchone()
-
-            if not settings_result:
-                print("[AUTO MODE] Error: System settings not found.")
-                conn.close()
-                continue
-            print(settings_result)
-            crop_name, growth_stage, CITY, start_time_str, end_time_str = settings_result
-
-            threshold_result = cur.execute(
-                "SELECT start_irrigation_threshold_fc FROM irrigation_schedule WHERE crop_name = ? AND growth_stage = ?",
-                (crop_name, growth_stage)
-            ).fetchone()
-
-            if not threshold_result:
-                print(f"[AUTO MODE] Error: No schedule found for {crop_name} ({growth_stage}).")
-                conn.close()
+            device_ids_result = cur.execute("SELECT DISTINCT device_id FROM system_settings").fetchall()
+            if not device_ids_result:
                 continue
             
-            start_threshold = threshold_result[0]
-            print(start_threshold)
-            sensor_result = cur.execute("SELECT moisture, water_lvl FROM parameters ORDER BY id DESC LIMIT 1").fetchone()
-            if not sensor_result:
-                conn.close()
-                continue
-            print(sensor_result)
-            latest_moisture, water_level = sensor_result
+            for device_tuple in device_ids_result:
+                print(device_tuple)
+                device_id = device_tuple[0]
+                
+                try:
+                    mode_result = cur.execute(
+                        "SELECT mode FROM system_mode WHERE device_id = ?",
+                        (device_id,)
+                    ).fetchone()
+                    
+                    current_mode = mode_result[0] if mode_result else 'MANUAL'
+                    
+                    if current_mode != 'AUTO':
+                        continue
+                    
+                    settings_result = cur.execute(
+                        "SELECT crop_name, growth_stage, city, start_at, end_at FROM system_settings WHERE device_id = ?",
+                        (device_id,)
+                    ).fetchone()
+                    
+                    print(settings_result)
 
-            url = f"http://api.weatherapi.com/v1/forecast.json?key={API_KEY}&q={CITY}&days=1&aqi=no&alerts=no"
-            response = requests.get(url)
-            response.raise_for_status()
-            weather_data = response.json()
-            rain_chance = weather_data['forecast']['forecastday'][0]['day']['daily_chance_of_rain']
-            precip_mm = weather_data['forecast']['forecastday'][0]['day']['totalprecip_mm']
+                    if not settings_result:
+                        print(f"[Device {device_id}] Error: System settings not found. Skipping.")
+                        continue
+                    crop_name, growth_stage, city, start_time_str, end_time_str = settings_result
+                    print(crop_name, growth_stage, city, start_time_str, end_time_str)
+                    threshold_result = cur.execute(
+                        "SELECT start_irrigation_threshold_fc FROM irrigation_schedule WHERE crop_name = ? AND growth_stage = ?",
+                        (crop_name, growth_stage)
+                    ).fetchone()
 
-            current_time_obj = datetime.now().time()
-            start_time_obj = datetime.strptime(start_time_str, '%H:%M').time()
-            end_time_obj = datetime.strptime(end_time_str, '%H:%M').time()
+                    if not threshold_result:
+                        print(f"[Device {device_id}] Error: No schedule for {crop_name} ({growth_stage}). Skipping.")
+                        continue
+                    start_threshold = threshold_result[0]
 
-            last_command_result = cur.execute("SELECT command FROM pump_command ORDER BY id DESC LIMIT 1").fetchone()
-            last_command = last_command_result[0] if last_command_result else 0
-            
-            new_command = None
-            reason = ""
+                    sensor_result = cur.execute(
+                        "SELECT moisture, water_lvl FROM parameters WHERE device_id = ? ORDER BY id DESC LIMIT 1",
+                        (device_id,)
+                    ).fetchone()
+                    
+                    print(sensor_result)
+                    if not sensor_result:
+                        print(f"[Device {device_id}] Error: No sensor data found. Skipping.")
+                        continue
+                    latest_moisture, water_level = sensor_result
 
-            if rain_chance > RAIN_CHANCE_THRESHOLD or precip_mm > RAIN_AMOUNT_THRESHOLD:
-                new_command = 0
-                reason = f"Pump OFF. Skipping due to high rain forecast in {CITY} ({rain_chance}% chance)."
-            
-            elif water_level < WATER_TANK_MIN_LEVEL:
-                new_command = 0
-                reason = f"Pump OFF. CRITICAL: Water tank level is low ({water_level}%)."
+                    url = f"http://api.weatherapi.com/v1/forecast.json?key={API_KEY}&q={city}&days=1&aqi=no&alerts=no"
+                    response = requests.get(url)
+                    response.raise_for_status()
+                    weather_data = response.json()
+                    rain_chance = weather_data['forecast']['forecastday'][0]['day']['daily_chance_of_rain']
+                    precip_mm = weather_data['forecast']['forecastday'][0]['day']['totalprecip_mm']
 
-            elif latest_moisture > SATURATION_POINT:
-                new_command = 0
-                reason = f"Pump OFF. Soil moisture ({latest_moisture}%) is above saturation point."
-            
-            elif not (start_time_obj <= current_time_obj < end_time_obj):
-                new_command = 0
-                reason = f"Pump OFF. Current time ({current_time_obj.strftime('%H:%M')}) is outside the permitted schedule ({start_time_str} - {end_time_str})."
-            
-            elif latest_moisture < start_threshold and (start_time_obj <= current_time_obj < end_time_obj):
-                new_command = 1
-                reason = f"Pump ON for {crop_name}. Moisture ({latest_moisture}%) is below threshold ({start_threshold}%)."
-            print(reason)
-            if new_command is not None and new_command != last_command:
-                cur.execute("INSERT INTO pump_command (command) VALUES (?)", (new_command,))
-                conn.commit()
-                if reason: 
-                    now = datetime.now().strftime("%Y-%m-%d %H:%M")
-                    msg = (f"[AUTO MODE] {reason} \n\n {now}")
-                    send_msg(msg, "1234815808")
-                    cur.execute("INSERT INTO notifications (msg, time) VALUES (?);", (msg, now))
-                    conn.commit()
+                    last_command_result = cur.execute(
+                        "SELECT command FROM pump_command WHERE device_id = ? ORDER BY id DESC LIMIT 1",
+                        (device_id,)
+                    ).fetchone()
+                    last_command = last_command_result[0] if last_command_result else 0
 
-        except requests.RequestException as e:
-            print(f"[AUTO MODE] Weather API Error: {e}")
+                    current_time_obj = datetime.now().time()
+                    start_time_obj = datetime.strptime(start_time_str, '%H:%M').time()
+                    end_time_obj = datetime.strptime(end_time_str, '%H:%M').time()
+                    
+                    new_command = None
+                    reason = ""
+
+                    if rain_chance > RAIN_CHANCE_THRESHOLD or precip_mm > RAIN_AMOUNT_THRESHOLD:
+                        new_command = 0
+                        reason = f"Pump OFF. High rain forecast in {city} ({rain_chance}% chance)."
+                    elif water_level < WATER_TANK_MIN_LEVEL:
+                        new_command = 0
+                        reason = f"Pump OFF. CRITICAL: Water tank level low ({water_level}%)."
+                    elif latest_moisture > SATURATION_POINT:
+                        new_command = 0
+                        reason = f"Pump OFF. Soil moisture ({latest_moisture}%) is above saturation."
+                    elif not (start_time_obj <= current_time_obj < end_time_obj):
+                        new_command = 0
+                        reason = f"Pump OFF. Outside of permitted schedule ({start_time_str} - {end_time_str})."
+                    elif latest_moisture < start_threshold:
+                        new_command = 1
+                        reason = f"Pump ON for {crop_name}. Moisture ({latest_moisture}%) is below threshold ({start_threshold}%)."
+                    else:
+                        new_command = 0
+                        reason = f"Pump OFF. Moisture ({latest_moisture}%) is sufficient."
+                    print(reason, device_tuple)
+                    if new_command is not None and new_command != last_command:
+                        cur.execute("INSERT INTO pump_command (device_id, command) VALUES (?, ?)", (device_id, new_command))
+                        
+                        if reason:
+                            now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+                            msg = f"[Device {device_id} | AUTO MODE] {reason}"
+                            cur.execute("INSERT INTO notifications (device_id, msg, time) VALUES (?, ?, ?)", (device_id, msg, now_str))
+                            send_msg(f"{msg}\n\n{now_str}", "1234815808")
+                        
+                        conn.commit()
+                        print(f"[Device {device_id}] Action: {reason}")
+
+                except requests.RequestException as e:
+                    print(f"[Device {device_id}] Weather API Error: {e}")
+                except Exception as e:
+                    print(f"[Device {device_id}] Error in processing loop: {e}")
+        
         except Exception as e:
-            print(f"[AUTO MODE] Error in logic thread: {e}")
+            print(f"[AUTO MODE] Critical error in main thread: {e}")
         
         finally:
             if conn:

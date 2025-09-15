@@ -542,6 +542,7 @@ def get_weather():
         return f"<h2>Error fetching weather data</h2><p>{str(e)}</p>"
 @app.route('/update', methods = ['POST', 'GET']) 
 def get_data():
+    print("called")
     data = request.get_json()
     print("received", data)
     conn = sqlite3.connect('database.db')
@@ -759,7 +760,8 @@ def auto_mode_logic():
                     else:
                         new_command = 0
                         reason = f"Pump OFF. Moisture ({latest_moisture}%) is sufficient."
-                    print(reason, device_tuple)
+                    print(reason, device_tuple, "----------------------------------------------")
+                    
                     if new_command is not None and new_command != last_command:
                         cur.execute("INSERT INTO pump_command (device_id, command) VALUES (?, ?)", (device_id, new_command))
                         

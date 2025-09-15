@@ -21,6 +21,8 @@ const int tankHeight = 100;   // cm
 const int dry_reading = 4095;
 const int wet_reading = 1560;
 
+int device_id=1;
+
 // === Globals ===
 DHT dht(DHTPIN, DHTTYPE);
 Preferences prefs;
@@ -140,7 +142,7 @@ void sendData(int water, int soil, float hum, float temp) {
   http.addHeader("Content-Type", "application/json");
 
   String body = "{";
-  body += "\"device_id\":\"" + getDeviceID() + "\",";
+  body += "\"device_id\":\"" + String(device_id) + "\",";
   body += "\"water_level\":" + String(water) + ",";
   body += "\"soil_moisture\":" + String(soil) + ",";
   body += "\"humidity\":" + String(hum) + ",";
@@ -156,7 +158,7 @@ void checkPumpCommand() {
   if (WiFi.status() != WL_CONNECTED) return;
 
   HTTPClient http;
-  http.begin(commandURL());
+  http.begin(commandURL()+"?device_id="+String(device_id));
   int httpResponseCode = http.GET();
 
   if (httpResponseCode == 200) {
@@ -187,6 +189,9 @@ void loop() {
 
   float humidity = 0, temperature = 0;
   readDHT(humidity, temperature);
+
+  Serial.println("Device ID: ");
+  Serial.println(device_id);
 
   Serial.println("=== Sensor Readings ===");
   Serial.printf("Device: %s | Water: %d%% | Soil1: %d%% | Soil2: %d%% | Avg Soil: %d%% | Hum: %.1f%% | Temp: %.1f°C\n",

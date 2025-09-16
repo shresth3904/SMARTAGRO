@@ -458,14 +458,19 @@ def update_settings():
 @app.route('/about')
 def about():
     return render_template('about.html', current_user = current_user)
+
+water_lvl = 75
+
 def changeval():
+    global water_lvl
     conn = sqlite3.connect('database.db')
     cur = conn.cursor()
-    moisture = random.randrange(0, 100)
-    temp = random.randrange(0, 100)
-    humidity = random.randrange(0, 100)
-    water_lvl = random.randrange(0, 100)
-    cur.execute("INSERT INTO parameters(moisture, temp, humidity, water_lvl, device_id) VALUES (?, ?, ?, ?, ?)", (moisture, temp, humidity, water_lvl, 2))
+    
+    moisture = cur.execute("SELECT moisture FROM parametres WHERE device_id = 1 ORDER BY id DESC LIMIT 1").fetchone()[0]
+    temp = random.randrange(28, 32)
+    humidity = random.randrange(70, 76)
+    water_lvl -= random.randrange(0, 2)
+    cur.execute("INSERT INTO parameters(moisture, temp, humidity, water_lvl, device_id) VALUES (?, ?, ?, ?, ?)", (moisture, temp, humidity, max(19,water_lvl), 1))
     conn.commit()
     conn.close()
     print("SAVED :",(moisture, temp, humidity, water_lvl))
@@ -548,7 +553,7 @@ def get_data():
     conn = sqlite3.connect('database.db')
     cur = conn.cursor()
     device_id = data['device_id']
-    moisture = data['soil_moisture']
+    moisture = 21.5
     temp = data['temperature']
     humidity = data['humidity']
     water_lvl = data['water_level']
@@ -589,7 +594,7 @@ def fetch_parameters():
     cur = con.cursor()
     cur.execute("SELECT id , moisture, temp, humidity, water_lvl FROM parameters WHERE device_id = ? ORDER BY id DESC LIMIT 10", (current_user.device_id,))
     data = cur.fetchall()
-
+    #changeval()
     return jsonify(data)
 
 
@@ -664,7 +669,7 @@ WATER_TANK_MIN_LEVEL = 20
 
 def auto_mode_logic():
     while True:
-        time.sleep(5)
+        time.sleep(1)
         conn = None
         try:
             conn = sqlite3.connect('database.db', timeout=10)

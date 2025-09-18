@@ -16,7 +16,7 @@
 #define RELAY_PIN 13
 
 // === Tank & Soil Settings ===
-const int tankHeight = 100;   // cm
+const int tankHeight = 15;   // cm
 const int dry_reading = 4095;
 const int wet_reading = 1560;
 

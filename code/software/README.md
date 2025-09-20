@@ -69,13 +69,13 @@ Follow these steps to run the project locally.
     Open the `app.py` file and replace the placeholder values with your actual keys:
 
     ```python
-    # Line 19
+    # Line 14
     app.config['SECRET_KEY'] = 'your_strong_secret_key'
 
-    # Line 21
+    # Line 16
     TELEGRAM_BOT_TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
 
-    # Line 301
+    # Line 205
     API_KEY = 'YOUR_WEATHERAPI_COM_KEY'
     ```
 

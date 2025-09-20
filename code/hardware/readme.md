@@ -22,7 +22,7 @@ To build the hardware for this project, you will need the following components:
 
 * **Microcontroller:** ESP32 Dev Kit C (or a similar ESP32 board)
 * **Sensors:**
-    * 2 x Capacitive Soil Moisture Sensor
+    * 2 x Soil Moisture Sensor
     * 1 x DHT22 (or DHT11) Temperature and Humidity Sensor
     * 1 x HC-SR04 Ultrasonic Distance Sensor
 * **Actuator:**

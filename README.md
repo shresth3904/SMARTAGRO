@@ -29,7 +29,7 @@ The project directly addresses the problem statement **"Implementation of Smart 
 
 ---
 ## Demo device id and code
-Device id: `1`
+Device id: `1`<br>
 Code: `6597`<br><br>
 ## 🛠️ Tech Stack
 

@@ -6,9 +6,9 @@ SmartAgro is an IoT-based smart irrigation system designed to address the challe
 
 ## Tasks Accomplished
 
-✅ **Task 1:** Developed a full-stack IoT solution, including hardware integration, a backend server, and a frontend user dashboard.
-✅ **Task 2:** Implemented a multi-conditional `AUTO` mode that considers soil moisture, crop type, weather forecasts, and water tank levels.
-✅ **Task 3:** Created a secure authentication system allowing users to register and link their specific hardware device for personalized monitoring and notifications.
+✅ **Task 1:** Developed a full-stack IoT solution, including hardware integration, a backend server, and a frontend user dashboard.<br>
+✅ **Task 2:** Implemented a multi-conditional `AUTO` mode that considers soil moisture, crop type, weather forecasts, and water tank levels.<br>
+✅ **Task 3:** Created a secure authentication system allowing users to register and link their specific hardware device for personalized monitoring and notifications.<br>
 
 ***
 

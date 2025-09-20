@@ -13,8 +13,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'we_are_going_to_win_sih'
 
-TELEGRAM_BOT_TOKEN = "8281251787:AAGEnx21qebtG0VS8h9gdckkUZ5bPLoYS6E"
-BOT_USERNAME = "SmartAgroBot"
+TELEGRAM_BOT_TOKEN = "telegram_token"
+BOT_USERNAME = "bot_name"
 
 
 login_manager = LoginManager()
@@ -202,7 +202,7 @@ weather_logo = {
             </div>"""
 }
 
-API_KEY = 'f5ab7b94c5094d5296793708251609'  
+API_KEY = 'weather_api_key'  
 
 def send_msg(msg, chat_id):
     BOT_TOKEN = "8281251787:AAGEnx21qebtG0VS8h9gdckkUZ5bPLoYS6E"

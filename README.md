@@ -38,7 +38,7 @@ The project directly addresses the problem statement **"Implementation of Smart 
 * **External APIs:**
     * WeatherAPI.com (for real-time weather forecasts)
     * Telegram Bot API (for notifications)
-* **Hardware (Conceptual):** ESP32, Soil Moisture Sensor, DHT11 (Temperature & Humidity), Ultrasonic Sensor (Water Level).
+* **Hardware :** ESP32, Soil Moisture Sensor, DHT22 (Temperature & Humidity), Ultrasonic Sensor (Water Level), Relay module and Pump.
 
 ---
 

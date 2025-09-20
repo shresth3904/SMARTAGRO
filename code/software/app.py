@@ -205,10 +205,9 @@ weather_logo = {
 API_KEY = 'weather_api_key'  
 
 def send_msg(msg, chat_id):
-    BOT_TOKEN = "8281251787:AAGEnx21qebtG0VS8h9gdckkUZ5bPLoYS6E"
     CHAT_ID = chat_id
 
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     params = {
         "chat_id": CHAT_ID,
         "text": msg,

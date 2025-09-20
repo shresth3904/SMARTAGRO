@@ -2,7 +2,7 @@
 
 SmartAgro is an IoT-based smart irrigation system designed to address the challenges of water scarcity and inefficient farming in hilly regions like Jorethang, South Sikkim. By integrating real-time sensor data, weather forecasts, and crop-specific intelligence, it automates the irrigation process to conserve water, enhance crop yields, and reduce manual labor for farmers.
 
-
+![Dashboard](./dashboard.png)
 
 ## Tasks Accomplished
 

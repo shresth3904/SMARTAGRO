@@ -23,7 +23,7 @@ The project directly addresses the problem statement **"Implementation of Smart 
 ## 🔗 Project Links
 
 * **SIH Presentation:** [Final SIH Presentation](https://github.com/your-username/your-repo/blob/main/SIH_Presentation.pptx)
-* **Video Demonstration:** [Watch Video](https://www.youtube.com/watch?v=your_unlisted_video_id)
+* **Video Demonstration:** [Watch Video](https://www.youtube.com/watch?v=FXC2-owW3Ds)
 * **Source Code:** [GitHub Repository](https://github.com/shresth3904/SMARTAGRO)
 * **Live Deployment** [SmartAgro](https://smartagro.pythonanywhere.com/)
 

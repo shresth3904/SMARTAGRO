@@ -19,7 +19,7 @@ This project leverages the following technologies:
 * **Python & Flask:** Chosen for its simplicity and robustness in building the backend REST APIs and handling core application logic.
 * **Flask-Login:** Used to manage user sessions for secure authentication, handling logging in, logging out, and remembering users.
 * **Werkzeug:** Provides essential utilities for WSGI applications, used here for securely handling passwords by generating and checking hashes.
-* **SQLite3:** A lightweight, serverless database used for managing user accounts, device registrations, and sensor data logs efficiently.
+* **SQLite3:** Database used for managing user accounts, device registrations, and sensor data logs efficiently.
 * **HTML/CSS/JS:** Used to create a responsive, intuitive, and interactive frontend dashboard for data visualization and user control.
 * **Chart.js:** A powerful JavaScript library used to render historical sensor data into interactive and easy-to-understand charts.
 * **WeatherAPI.com:** Integrated to fetch real-time weather forecasts, enabling the system to make smarter, weather-aware irrigation decisions.

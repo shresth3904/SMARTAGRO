@@ -324,5 +324,3 @@ function toggle_switch() {
     })
     .catch(error => console.error('Error toggling pump:', error));
 }
-
-

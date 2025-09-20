@@ -1,8 +1,6 @@
 # SmartAgro: Smart Irrigation for Hilly Regions
 
-### PS Chosen: SIH Hackathon (ID: ID25062)
-
-This README provides an overview of the **SmartAgro** project, a sensor-based smart irrigation system developed for the Smart India Hackathon. It includes team details, relevant links, key features, the technology stack, and steps to run the project locally.
+### PS Chosen: Implementation of Smart Agriculture for Efficient Cultivation in Hilly Regions (ID: 25062)
 
 The project directly addresses the problem statement **"Implementation of Smart Agriculture for Efficient Cultivation in Hilly Regions"** by providing an affordable, automated irrigation solution tailored to conserve water and improve crop yields in water-scarce areas like Jorethang, South Sikkim.
 
@@ -11,8 +9,8 @@ The project directly addresses the problem statement **"Implementation of Smart 
 ## Team Details
 
 **Team Name:** SmartAgro
-* **Team Leader:** Piyush Lal - [@piyushlal2005](https://github.com/piyushlal2005)
-* **Team Members:**
+* **Team Leader:** Piyush Lal - [@piyushlal2005](https://github.com/piyushlal2005)<br>
+ **Team Members:**
 * **Shresth** - [@shresth3904](https://github.com/shresth3904)
 * **Daksh Gulia** - [@DakshGulia475](https://github.com/DakshGulia475)
 * **Tanay Agarwal** - [@tanayagarwal-2006](https://github.com/tanayagarwal-2006)
@@ -26,7 +24,8 @@ The project directly addresses the problem statement **"Implementation of Smart 
 
 * **SIH Presentation:** [Final SIH Presentation](https://github.com/your-username/your-repo/blob/main/SIH_Presentation.pptx)
 * **Video Demonstration:** [Watch Video](https://www.youtube.com/watch?v=your_unlisted_video_id)
-* **Source Code:** [GitHub Repository](https://github.com/your-username/your-repo)
+* **Source Code:** [GitHub Repository](https://github.com/shresth3904/SMARTAGRO)
+* **Live Deployment** [SmartAgro](https://smartagro.pythonanywhere.com/)
 
 ---
 
@@ -97,9 +96,8 @@ Follow these steps to set up and run the project on your local machine.
 
 3.  **Install Dependencies**
     ```sh
-    pip install Flask Flask-Login Werkzeug requests
+    pip install -r requirements.txt
     ```
-    *(You can also create a `requirements.txt` file with these packages and run `pip install -r requirements.txt`)*
 
 4.  **Set Up API Keys**
     In the `app.py` file, replace the placeholder values for the following variables with your actual keys:
@@ -113,13 +111,9 @@ Follow these steps to set up and run the project on your local machine.
     # Line 301
     API_KEY = 'YOUR_WEATHERAPI_COM_KEY'
     ```
+    
 
-5.  **Initialize the Database**
-    The application automatically creates the `database.db` file and the necessary tables when it first runs. However, you will need to manually add data to the `irrigation_schedule` and `device` tables for the system to function correctly.
-
-    You can use a tool like **DB Browser for SQLite** to create and populate these tables.
-
-6.  **Run the Application**
+5.  **Run the Application**
     ```sh
     flask run
     ```

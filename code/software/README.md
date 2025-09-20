@@ -43,7 +43,7 @@ Follow these steps to run the project locally.
 
 1.  **Clone the Repository**
     ```bash
-    git clone [https://github.com/shresth3904/SMARTAGRO.git](https://github.com/shresth3904/SMARTAGRO.git)
+    git clone https://github.com/shresth3904/SMARTAGRO.git
     cd SMARTAGRO/code/software
     ```
 

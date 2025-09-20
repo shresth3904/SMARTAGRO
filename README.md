@@ -78,8 +78,8 @@ Follow these steps to set up and run the project on your local machine.
 
 1.  **Clone the Repository**
     ```sh
-    git clone [https://github.com/your-username/your-repo.git](https://github.com/your-username/your-repo.git)
-    cd your-repo
+    git clone [https://github.com/shresth3904/SMARTAGRO.git](https://github.com/shresth3904/SMARTAGRO.git)
+    cd SMARTAGRO/code/software
     ```
 
 2.  **Create and Activate a Virtual Environment**

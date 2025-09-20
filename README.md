@@ -28,7 +28,9 @@ The project directly addresses the problem statement **"Implementation of Smart 
 * **Live Deployment** [SmartAgro](https://smartagro.pythonanywhere.com/)
 
 ---
-
+## Demo device id and code
+Device id: `1`
+Code: `6597`<br><br>
 ## 🛠️ Tech Stack
 
 * **Backend:** Python, Flask, Flask-Login

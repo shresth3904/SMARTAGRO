@@ -11,8 +11,8 @@ The project directly addresses the problem statement **"Implementation of Smart 
 ## Team Details
 
 **Team Name:** SmartAgro
-**Team Leader:** Piyush Lal - [@piyushlal2005](https://github.com/piyushlal2005)
-**Team Members:**
+* **Team Leader:** Piyush Lal - [@piyushlal2005](https://github.com/piyushlal2005)
+* **Team Members:**
 * **Shresth** - [@shresth3904](https://github.com/shresth3904)
 * **Daksh Gulia** - [@DakshGulia475](https://github.com/DakshGulia475)
 * **Tanay Agarwal** - [@tanayagarwal-2006](https://github.com/tanayagarwal-2006)

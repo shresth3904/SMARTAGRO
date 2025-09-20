@@ -41,7 +41,7 @@ class User(UserMixin):
 @login_manager.user_loader
 def load_user(user_id):
     con = get_db_connection()
-    user_data = con.execute('SELECT * FROM users WHERE id = ?', (user_id)).fetchone()
+    user_data = con.execute('SELECT * FROM users WHERE id = ?', (user_id, )).fetchone()
     con.close()
     
     if user_data:
@@ -202,7 +202,7 @@ weather_logo = {
             </div>"""
 }
 
-API_KEY = '91251ddd30ce4a8e862203910251009'  
+API_KEY = 'f5ab7b94c5094d5296793708251609'  
 
 def send_msg(msg, chat_id):
     BOT_TOKEN = "8281251787:AAGEnx21qebtG0VS8h9gdckkUZ5bPLoYS6E"
@@ -459,21 +459,7 @@ def update_settings():
 def about():
     return render_template('about.html', current_user = current_user)
 
-water_lvl = 75
 
-def changeval():
-    global water_lvl
-    conn = sqlite3.connect('database.db')
-    cur = conn.cursor()
-    
-    moisture = cur.execute("SELECT moisture FROM parametres WHERE device_id = 1 ORDER BY id DESC LIMIT 1").fetchone()[0]
-    temp = random.randrange(28, 32)
-    humidity = random.randrange(70, 76)
-    water_lvl -= random.randrange(0, 2)
-    cur.execute("INSERT INTO parameters(moisture, temp, humidity, water_lvl, device_id) VALUES (?, ?, ?, ?, ?)", (moisture, temp, humidity, max(19,water_lvl), 1))
-    conn.commit()
-    conn.close()
-    print("SAVED :",(moisture, temp, humidity, water_lvl))
 
 
 
@@ -575,7 +561,7 @@ def pump():
         conn.close()
         print(status)
         return str(status)
-    
+
     
 @app.route('/pump_status', methods = ['GET'])
 def pump_status():
@@ -594,7 +580,6 @@ def fetch_parameters():
     cur = con.cursor()
     cur.execute("SELECT id , moisture, temp, humidity, water_lvl FROM parameters WHERE device_id = ? ORDER BY id DESC LIMIT 10", (current_user.device_id,))
     data = cur.fetchall()
-    #changeval()
     return jsonify(data)
 
 

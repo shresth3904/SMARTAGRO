@@ -6,7 +6,7 @@
 #include "esp_system.h"
 #include "esp_mac.h"
 
-// === Pins ===
+// Pins
 #define TRIG_PIN 5
 #define ECHO_PIN 18
 #define SOIL_PIN_1 34
@@ -15,28 +15,28 @@
 #define DHTTYPE DHT22
 #define RELAY_PIN 13
 
-// === Tank & Soil Settings ===
+// Tank & Soil Settings
 const int tankHeight = 14;   // cm
 const int dry_reading = 4095;
 const int wet_reading = 1560;
 
-// === Globals ===
+// Globals
 DHT dht(DHTPIN, DHTTYPE);
 Preferences prefs;
 bool shouldSaveConfig = false;
 String serverBase = "";  
 String deviceID = "";
 
-// === Callbacks ===
+// Callbacks
 void saveConfigCallback() {
   shouldSaveConfig = true;
 }
 
-// === Build URLs ===
+// Build URLs
 String updateURL()  { return serverBase + "/update"; }
 String commandURL() { return serverBase + "/pump"; }
 
-// === Device ID (MAC) === (for future scalability)
+// Device ID (MAC) (for future scalability)
 String getDeviceID() {
   if (deviceID != "") return deviceID;
   uint8_t mac[6];
@@ -82,7 +82,7 @@ void setup() {
   }
   serverBase = storedServer;
 
-  // WiFiManager portal - NOTE: serverParam is a stack variable (NOT new) to avoid dangling pointers
+  // WiFiManager portal
   WiFi.mode(WIFI_STA);
   WiFiManager wifiManager;
   WiFiManagerParameter serverParam("server", "Server URL", serverBase.c_str(), 128);
@@ -101,7 +101,6 @@ void setup() {
   Serial.print("IP: ");
   Serial.println(WiFi.localIP());
 
-  // IMPORTANT: copy the parameter value IMMEDIATELY while serverParam is still valid (stack)
   const char *val = serverParam.getValue();
   if (val != nullptr && strlen(val) > 0) {
     String newServer = String(val);
@@ -111,12 +110,11 @@ void setup() {
     }
     serverBase = newServer;
   } else {
-    // If param empty, keep previously loaded serverBase (from prefs or default)
     Serial.println("Using stored/default server URL: " + serverBase);
   }
 }
 
-// === Sensors ===
+// Sensors
 int readWaterLevelSingle() {
   digitalWrite(TRIG_PIN, LOW); delayMicroseconds(2);
   digitalWrite(TRIG_PIN, HIGH); delayMicroseconds(10);
@@ -144,7 +142,7 @@ bool readDHT(float &h, float &t) {
   return !(isnan(h) || isnan(t));
 }
 
-// === Communication ===
+// Communication
 void sendData(int water, int soil, float hum, float temp) {
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("WiFi not connected, skipping sendData()");
@@ -158,7 +156,6 @@ void sendData(int water, int soil, float hum, float temp) {
     return;
   }
 
-  // Use c_str() to avoid temporary String lifetime issues
   http.begin(url.c_str());
   http.addHeader("Content-Type", "application/json");
 
@@ -222,12 +219,12 @@ void loop() {
   float humidity = 0, temperature = 0;
   readDHT(humidity, temperature);
 
-  Serial.println("=== Sensor Readings ===");
+  Serial.println("--- Sensor Readings ---");
   Serial.printf("Device: %s | Water: %d%% | Soil1: %d%% | Soil2: %d%% | Avg Soil: %d%% | Hum: %.1f%% | Temp: %.1f°C\n",
                 getDeviceID().c_str(), waterLevel, soil1, soil2, avgSoil, humidity, temperature);
 
   sendData(waterLevel, avgSoil, humidity, temperature);
   checkPumpCommand();
 
-  safeDelayMs(2000);
+  safeDelayMs(1000);
 }

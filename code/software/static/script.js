@@ -94,24 +94,20 @@ async function fetchPumpStatus() {
   try {
     const response = await fetch('/pump_status');
 
-    // If the server response is not OK (e.g., 404, 500), it's a disconnection.
+  
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
 
     const data = await response.json();
-    // data structure: [ status, command ] which can be [ [id, status], [command] ] or [ null, null ]
-
-    // --- 1. CORRECTED CONNECTION LOGIC ---
-    // If the 'status' part of the data exists, we are connected.
     if (data && data[0]) {
-      document.getElementById('pump_status_value').textContent = 'Connected';
-      document.getElementById('pump_status_value').className = 'connected';
+      document.getElementById('pump_status_value').textContent = 'Disconnected';
+      document.getElementById('pump_status_value').className = 'disconnected';
     } else {
       throw new Error('No status data received from server.');
     }
 
-    // --- 2. UPDATE ON/OFF ICON LOGIC ---
+ 
     const latestCommand = Array.isArray(data[1]) ? data[1][0] : null;
     console.log(latestCommand);
     const icon = document.getElementById('pump_status_value_icon');
@@ -120,13 +116,12 @@ async function fetchPumpStatus() {
       icon.textContent = 'ON';
       icon.className = 'connected';
     } else {
-      // Show OFF if command is 0 or if no command has ever been issued (null)
+     
       icon.textContent = 'OFF';
       icon.className = 'disconnected';
     }
 
   } catch (error) {
-    // If ANY error occurs during the fetch, it means we are disconnected.
     console.error('Failed to fetch pump status:', error);
     document.getElementById('pump_status_value').textContent = 'Disconnected';
     document.getElementById('pump_status_value').className = 'disconnected';

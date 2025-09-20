@@ -74,6 +74,7 @@ Follow these steps to run the project locally.
 
     # Line 16
     TELEGRAM_BOT_TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
+    BOT_NAME = "YOUR_BOT_NAME"
 
     # Line 205
     API_KEY = 'YOUR_WEATHERAPI_COM_KEY'

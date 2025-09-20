@@ -3,7 +3,7 @@
 This directory contains the Arduino C++ firmware for the ESP32 microcontroller, which serves as the core of the SmartAgro IoT device. This code is responsible for reading data from various environmental sensors, sending it to a central server, and receiving commands to control the irrigation pump.
 
 ## Circuit Diagram
-![Circuit Diagram](./code/hardware/circuit_diagram.png)
+![Circuit Diagram](.circuit_diagram.png)
 
 ## Features ✨
 

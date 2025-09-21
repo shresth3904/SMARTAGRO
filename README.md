@@ -29,6 +29,10 @@ The project directly addresses the problem statement **"Implementation of Smart 
 * **Live Deployment** [SmartAgro](https://smartagro.pythonanywhere.com/)
 
 ---
+## Additional resources
+* [Weather API](https://www.weatherapi.com/)<br>
+* [Telegram Bot](https://core.telegram.org/bots/tutorial)
+---
 ## Demo device id and code
 Device id: `1`<br>
 Code: `6597`<br><br>
@@ -120,8 +124,11 @@ Follow these steps to run the project locally.
     ```
     The application will now be running and accessible at **http://127.0.0.1:5000**.
     ```
+
+    ```
     Alternatively, you can run the Python script directly:
-    ```sh
+
+    ```bash
     python app.py
     ```
     The application will be accessible at `http://127.0.0.1:5000`.

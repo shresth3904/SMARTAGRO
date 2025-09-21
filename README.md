@@ -8,14 +8,15 @@ The project directly addresses the problem statement **"Implementation of Smart 
 
 ## Team Details
 
-**Team Name:** SmartAgro
-* **Team Leader:** Piyush Lal - [@piyushlal2005](https://github.com/piyushlal2005)<br><br>
+**Team Name:** SmartAgro<br>
+ **Team Leader:** Piyush Lal - [@piyushlal2005](https://github.com/piyushlal2005)<br><br>
  **Team Members:**<br>
-* **Shresth** - [@shresth3904](https://github.com/shresth3904)
-* **Daksh Gulia** - [@DakshGulia475](https://github.com/DakshGulia475)
-* **Tanay Agarwal** - [@tanayagarwal-2006](https://github.com/tanayagarwal-2006)
-* **Vedika Choudhary** - [@vedikachoudhary20](https://github.com/vedikachoudhary20)
-* **Pratham Sagar** - [@oscillocode](https://github.com/oscillocode)
+* **Shresth** - 2024UEA6597 - [@shresth3904](https://github.com/shresth3904)
+* **Piyush Lal** - 2024UEA6577 - [@piyushlal2005](https://github.com/piyushlal2005)
+* **Daksh Gulia** - 2024UEA6584 - [@DakshGulia475](https://github.com/DakshGulia475)
+* **Tanay Agarwal** - 2024UEA6582 - [@tanayagarwal-2006](https://github.com/tanayagarwal-2006)
+* **Vedika Choudhary** - 2024UEA6609 - [@vedikachoudhary20](https://github.com/vedikachoudhary20)
+* **Pratham Sagar** - 2024UEA6628 - [@oscillocode](https://github.com/oscillocode)
 
 
 ---
@@ -68,56 +69,56 @@ Code: `6597`<br><br>
 
 ---
 
-## 🚀 How to Run Locally
+## Local Setup Instructions (Write for both windows and macos)
 
-Follow these steps to set up and run the project on your local machine.
-
-### Prerequisites
-* Python 3.8+
-* `pip` (Python package installer)
-
-### Installation & Setup
+Follow these steps to run the project locally.
 
 1.  **Clone the Repository**
-    ```sh
+    ```bash
     git clone https://github.com/shresth3904/SMARTAGRO.git
     cd SMARTAGRO/code/software
     ```
 
 2.  **Create and Activate a Virtual Environment**
-    * On macOS/Linux:
-        ```sh
+    * **On macOS/Linux:**
+        ```bash
         python3 -m venv venv
         source venv/bin/activate
         ```
-    * On Windows:
-        ```sh
+    * **On Windows:**
+        ```bash
         python -m venv venv
         .\venv\Scripts\activate
         ```
 
-3.  **Install Dependencies**
-    ```sh
+3.  **Install Required Dependencies**
+    ```bash
     pip install -r requirements.txt
     ```
 
-4.  **Set Up API Keys**
-    In the `app.py` file, replace the placeholder values for the following variables with your actual keys:
+4.  **Configure API Keys and Secret Key**
+
+    Open the `app.py` file and replace the placeholder values with your actual keys:
+
     ```python
-    # Line 19
+    # Line 14
     app.config['SECRET_KEY'] = 'your_strong_secret_key'
 
-    # Line 21
+    # Line 16
     TELEGRAM_BOT_TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"
+    BOT_NAME = "YOUR_BOT_NAME"
 
-    # Line 301
+    # Line 205
     API_KEY = 'YOUR_WEATHERAPI_COM_KEY'
     ```
-    
+[Weather API](https://www.weatherapi.com/)<br>
+[Telegram Bot](https://core.telegram.org/bots/tutorial)
 
-5.  **Run the Application**
-    ```sh
+5.  **Run the Flask Application**
+    ```bash
     flask run
+    ```
+    The application will now be running and accessible at **http://127.0.0.1:5000**.
     ```
     Alternatively, you can run the Python script directly:
     ```sh

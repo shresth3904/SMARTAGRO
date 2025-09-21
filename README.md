@@ -125,7 +125,6 @@ Follow these steps to run the project locally.
     The application will now be running and accessible at **http://127.0.0.1:5000**.
     ```
 
-    ```
     Alternatively, you can run the Python script directly:
 
     ```bash

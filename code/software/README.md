@@ -79,7 +79,7 @@ Follow these steps to run the project locally.
     # Line 205
     API_KEY = 'YOUR_WEATHERAPI_COM_KEY'
     ```
-[Weather API](https://www.weatherapi.com/)
+[Weather API](https://www.weatherapi.com/)<br>
 [Telegram Bot](https://core.telegram.org/bots/tutorial)
 
 5.  **Run the Flask Application**

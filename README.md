@@ -33,7 +33,7 @@ The project directly addresses the problem statement **"Implementation of Smart 
 * [Weather API](https://www.weatherapi.com/)<br>
 * [Telegram Bot](https://core.telegram.org/bots/tutorial)
 ---
-## Demo Device ID and Device Code
+## Demo Device ID & Device Code
 Device ID: `1`<br>
 Device Code: `6597`<br><br>
 ## 🛠️ Tech Stack

@@ -34,7 +34,7 @@ The project directly addresses the problem statement **"Implementation of Smart 
 * [Telegram Bot](https://core.telegram.org/bots/tutorial)
 ---
 ## Demo Device ID and Device Code
-Device : ID`1`<br>
+Device ID: `1`<br>
 Device Code: `6597`<br><br>
 ## 🛠️ Tech Stack
 

@@ -33,9 +33,9 @@ The project directly addresses the problem statement **"Implementation of Smart 
 * [Weather API](https://www.weatherapi.com/)<br>
 * [Telegram Bot](https://core.telegram.org/bots/tutorial)
 ---
-## Demo device id and code
-Device id: `1`<br>
-Code: `6597`<br><br>
+## Demo Device ID and Device Code
+Device : ID`1`<br>
+Device Code: `6597`<br><br>
 ## 🛠️ Tech Stack
 
 * **Backend:** Python, Flask, Flask-Login

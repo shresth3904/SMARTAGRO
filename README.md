@@ -9,7 +9,7 @@ The project directly addresses the problem statement **"Implementation of Smart 
 ## Team Details
 
 **Team Name:** SmartAgro<br>
- **Team Leader:** Piyush Lal - [@piyushlal2005](https://github.com/piyushlal2005)<br><br>
+
  **Team Members:**<br>
 * **Shresth** - 2024UEA6597 - [@shresth3904](https://github.com/shresth3904)
 * **Piyush Lal** - 2024UEA6577 - [@piyushlal2005](https://github.com/piyushlal2005)

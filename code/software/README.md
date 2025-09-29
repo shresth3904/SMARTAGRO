@@ -37,7 +37,7 @@ This project leverages the following technologies:
 
 ***
 
-## Local Setup Instructions (Write for both windows and macos)
+## Local Setup Instructions
 
 Follow these steps to run the project locally.
 
